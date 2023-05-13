@@ -1,0 +1,100 @@
+{
+  "name": "cavyar-vscode",
+  "displayName": "CAVYAR",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.76.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "type": "webview",
+          "id": "cavyar-vscode.view",
+          "name": "CAVYAR",
+          "icon": "./media/icon.png"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cavyar-vscode.start",
+        "category": "CAVYAR",
+        "title": "Start"
+      },
+      {
+        "command": "cavyar-vscode.sayHello",
+        "category": "CAVYAR",
+        "title": "Hello World"
+      },
+      {
+        "command": "cavyar-vscode.addColor",
+        "category": "CAVYAR",
+        "title": "Add Color"
+      },
+      {
+        "command": "cavyar-vscode.openSnippetDetails",
+        "category": "CAVYAR",
+        "title": "Open Snippet Details"
+      }
+    ],
+    "menus": {
+      "view/title": []
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "yarn run compile",
+    "compile": "tsc -p ./ --outDir ./out",
+    "watch": "tsc -watch -p ./ --outDir ./out",
+    "pretest": "yarn run compile && yarn run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "svelte-build": "rollup -c --bundleConfigAsCjs",
+    "svelte-dev": "concurrently \"rollup -c -w --bundleConfigAsCjs\" \"tsc -watch -p ./ --outDir ./out\"",
+    "start": "sirv public"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^24.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@tsconfig/svelte": "^3.0.0",
+    "@types/axios": "^0.14.0",
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/seedrandom": "^3.0.5",
+    "@types/vscode": "^1.76.0",
+    "@types/vscode-webview": "^1.57.1",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "@vscode/test-electron": "^2.2.3",
+    "eslint": "^8.34.0",
+    "glob": "^8.1.0",
+    "mocha": "^10.2.0",
+    "rollup": "^3.19.1",
+    "rollup-plugin-import-css": "^3.2.1",
+    "rollup-plugin-svelte": "^7.1.4",
+    "svelte": "^3.56.0",
+    "svelte-check": "^3.1.2",
+    "svelte-preprocess": "^5.0.1",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.32",
+    "axios": "^1.3.4",
+    "bson-objectid": "^2.0.4",
+    "nanostores": "^0.7.4",
+    "prismjs": "^1.29.0",
+    "seedrandom": "^3.0.5",
+    "sirv": "^2.0.2",
+    "svelte-navigator": "^3.2.2"
+  }
+}

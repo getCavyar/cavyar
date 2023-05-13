@@ -1,0 +1,35 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.2",
+    "@types/seedrandom": "^3.0.5",
+    "nuxt": "^3.2.2"
+  },
+  "dependencies": {
+    "@nuxtjs/color-mode": "^3.2.0",
+    "@nuxtjs/tailwindcss": "^6.4.1",
+    "@pinia/nuxt": "^0.4.7",
+    "@solana/wallet-adapter-wallets": "^0.19.15",
+    "@solana/web3.js": "^1.73.3",
+    "@tailwindcss/line-clamp": "^0.4.2",
+    "@types/uuid": "^9.0.1",
+    "@vueuse/nuxt": "^9.13.0",
+    "ace-builds": "^1.15.2",
+    "mongodb": "^5.1.0",
+    "nuxt-icon": "^0.3.2",
+    "pinia": "^2.0.32",
+    "prismjs": "^1.29.0",
+    "seedrandom": "^3.0.5",
+    "solana-wallets-vue": "^0.6.0",
+    "uuid": "^9.0.0",
+    "vue-prism-component": "^2.0.0",
+    "vue3-ace-editor": "^2.2.2"
+  }
+}
