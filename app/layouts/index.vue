@@ -35,36 +35,27 @@ onMounted(() => {
       <div
         class="radial-gradient pb-5 h-screen w-screen fixed z-0 flex flex-col items-center justify-center space-y-8"
       >
-        <img src="@/assets/images/logo_white.png" class="h-12" />
-        <div class="w-1/2 h-16 relative flex items-center justify-center group">
-          <input
-            class="w-full h-full pl-16 py-1 px-4 text-white text-lg font-medium bg-black/60 backdrop-blur-2xl rounded-xl shadow-xl shadow-black/40 border border-transparent hover:border-primary focus:border-primary transition-all duration-500"
-            placeholder="PDA Signer Anchor..."
-          />
-          <icon
-            name="line-md:search"
-            size="1.4em"
-            class="mb-0.5 absolute left-5 text-white group-hover:text-primary transition-all duration-500"
-          />
-        </div>
+        <slot name="content" />
       </div>
     </div>
 
-    <div
-      class="mt-[100vh] min-h-screen py-20 bg-black/80 backdrop-blur-2xl z-30"
-      style="box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.3)"
-    >
-      <div class="space-y-3 flex flex-col">
-        <h3 class="w-fit pl-6">Trending</h3>
-        <div class="px-6 w-full space-x-8 flex flex-row overflow-auto">
-          <slot name="trending" />
+    <div class="overflow-hidden">
+      <div
+        class="mt-[100vh] relative min-h-screen py-20 bg-black/80 backdrop-blur-2xl z-30"
+        style="box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.3)"
+      >
+        <div class="space-y-3 flex flex-col">
+          <h3 class="w-fit pl-6">Trending</h3>
+          <div class="px-6 max-w-[90vw] space-x-8 flex flex-row overflow-auto">
+            <slot name="trending" />
+          </div>
         </div>
-      </div>
-      <div class="h-20"></div>
-      <div class="space-y-3 flex flex-col">
-        <h3 class="w-fit pl-6">Recent</h3>
-        <div class="px-6 w-full space-x-8 flex flex-row overflow-auto">
-          <slot name="recent" />
+        <div class="h-20"></div>
+        <div class="space-y-3 flex flex-col">
+          <h3 class="w-fit pl-6">Recent</h3>
+          <div class="px-6 max-w-[90vw] space-x-8 flex flex-row overflow-auto">
+            <slot name="recent" />
+          </div>
         </div>
       </div>
     </div>

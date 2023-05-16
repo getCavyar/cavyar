@@ -8,6 +8,9 @@ export default defineNuxtConfig({
     "nuxt-icon",
   ],
   css: ["@/assets/css/main.pcss"],
+  app: {
+    pageTransition: { name: "page", mode: "out-in" },
+  },
   runtimeConfig: {
     // Private keys are only available on the server
     mongoPW: process.env.MONGO_PW,

@@ -11,34 +11,26 @@ const showAppbar = computed(() => {
 <template>
   <div
     v-if="showAppbar"
-    class="w-screen fixed top-0 left-0 flex flex-col z-40 shadow-lg shadow-black/40"
+    class="rounded-full w-[calc(100vw-3rem)] mx-6 my-2 fixed top-0 left-0 flex flex-row justify-between items-center z-40"
   >
-    <div
-      class="p-6 h-[66px] flex items-center justify-between bg-surface/70 backdrop-blur-xl"
+    <!-- <div
+      class="p-6 w-fit h-[60px] flex items-center justify-center bg-surface/70 backdrop-blur-xl rounded-full"
     >
       <nuxt-link to="/" :prefetch="true">
-        <img class="h-5" src="@/assets/images/logo.png" alt="Logo" />
+        <img class="h-4" src="@/assets/images/logo.png" alt="Logo" />
       </nuxt-link>
+    </div> -->
+    <div
+      class="ml-auto p-2 w-fit h-[60px] flex items-center justify-center bg-surface/70 backdrop-blur-xl rounded-full"
+    >
+      <!-- <div
+        class="space-x-4 absolute top-1.5 right-2 flex flex-row items-center justify-center"
+      > -->
 
-      <div
-        class="space-x-4 absolute top-2.5 right-6 flex flex-row items-center justify-center"
-      >
-        <wallet-button />
-      </div>
+      <wallet-button />
+      <!-- </div> -->
     </div>
-    <div class="bottom-gradient-border"></div>
   </div>
 </template>
 
-<style lang="postcss" scoped>
-.bottom-gradient-border {
-  @apply w-screen h-[0.3px];
-  background: linear-gradient(
-    200deg,
-    rgb(var(--primary)),
-    rgb(var(--secondary)),
-    rgb(var(--primary)),
-    rgb(var(--secondary))
-  );
-}
-</style>
+<style lang="postcss" scoped></style>
