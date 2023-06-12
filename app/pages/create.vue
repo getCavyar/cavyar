@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Ace, Range } from "ace-builds";
 import { storeToRefs } from "pinia";
-import { VAceEditorInstance } from "vue3-ace-editor/types";
+import { useConnectWalletStore } from "~/stores/connectWalletStore";
 import { DialogType, useDialogStore } from "~~/stores/dialogStore";
 import {
   CreationMode,
@@ -61,29 +61,74 @@ const getSnippetCode = (editor: Ace.Editor) => {
 
 const { openDialog } = useDialogStore();
 
-const onFinished = async () => {
-  if (!editor.value) {
-    openDialog(DialogType.Error, "Internal error: Editor not initialized");
-    console.log("Editor not initialized", editor.value);
-    return;
-  }
-  const snippetCode = getSnippetCode(editor.value._editor);
+const { showConnectWalletDialog } = storeToRefs(useConnectWalletStore());
 
-  const { data } = await useFetch("/api/snippets", {
-    method: "POST",
-    body: JSON.stringify({
-      creator: "123456789", // TODO: Use JWT
+const onFinished = async () => {
+  try {
+    if (!editor.value) {
+      openDialog(DialogType.Error, "Internal error: Editor not initialized");
+      console.log("Editor not initialized", editor.value);
+      return;
+    }
+    const snippetCode = getSnippetCode(editor.value._editor);
+
+    const { data: sessionData } = useAuth();
+
+    if (!sessionData.value?.user?.name) {
+      openDialog(
+        DialogType.Error,
+        "You must be logged in to create a snippet",
+        [
+          {
+            label: "Sign in",
+            callback: () => {
+              showConnectWalletDialog.value = true;
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    console.log("Creating snippet", {
+      creator: sessionData.value.user.name,
       title: snippetTitle.value,
       description: snippetDescription.value,
       code: snippetCode,
       tags: snippetTags.value,
       framework: snippetFramework.value,
-    } as POSTSnippet),
-  });
+    } as POSTSnippet);
 
-  if (data) {
-    openDialog(DialogType.Info, "Snippet created successfully");
-  } else {
+    const { data } = await useFetch("/api/snippets", {
+      method: "POST",
+      body: JSON.stringify({
+        creator: sessionData.value.user.name,
+        title: snippetTitle.value,
+        description: snippetDescription.value,
+        code: snippetCode,
+        tags: snippetTags.value,
+        framework: snippetFramework.value,
+      } as POSTSnippet),
+    });
+
+    if (data) {
+      // @ts-ignore
+      const id = data.value!.data.toString();
+      await navigateTo(`/snippets/${id}`);
+
+      // clear editor
+      codeEditorValue.value = "";
+      mode.value = 1;
+      markerGroups.value = [];
+      snippetDescription.value = "";
+      snippetTitle.value = "";
+      snippetFramework.value = "anchor";
+      snippetTags.value = [];
+    } else {
+      openDialog(DialogType.Error, "Snippet creation failed");
+    }
+  } catch (e) {
+    console.error(e);
     openDialog(DialogType.Error, "Snippet creation failed");
   }
 };
@@ -92,13 +137,9 @@ const onFinished = async () => {
 <template>
   <lazy-selection-menu />
   <nuxt-layout name="create" @finished="onFinished">
-    <client-only>
-      <lazy-code-editor
-        v-model="codeEditorValue"
-        :read-only="mode == CreationMode.select"
-      />
-    </client-only>
+    <lazy-code-editor
+      v-model="codeEditorValue"
+      :read-only="mode == CreationMode.select"
+    />
   </nuxt-layout>
 </template>
-
-<style lang="postcss"></style>

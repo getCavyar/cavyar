@@ -6,8 +6,13 @@ import {
 } from "~~/stores/snippetCreationStore";
 import { v4 as idv4 } from "uuid";
 import { DialogType, useDialogStore } from "~~/stores/dialogStore";
+import prettier from "prettier";
+import parserTypeScript from "prettier/parser-typescript";
+import * as rustPlugin from "prettier-plugin-rust";
 
 const emit = defineEmits(["finished"]);
+
+const { openDialog } = useDialogStore();
 
 const snippetCreationStore = useSnippetCreationStore();
 const {
@@ -15,13 +20,55 @@ const {
   mode,
   selectedMarkerGroup,
   markerGroups,
-  frameworks,
   snippetTitle,
   snippetDescription,
-  snippetFramework,
   snippetTags,
   tagInput,
+  selectedSnippetFrameworkLanguage,
 } = storeToRefs(snippetCreationStore);
+
+const formatCode = async () => {
+  try {
+    if (selectedSnippetFrameworkLanguage.value === "typescript") {
+      codeEditorValue.value = prettier.format(codeEditorValue.value, {
+        parser: "typescript",
+        plugins: [parserTypeScript],
+        tabWidth: 4,
+      });
+      return;
+    }
+    if (selectedSnippetFrameworkLanguage.value === "python") {
+      // TODO: Find a python formatter.
+      openDialog(
+        DialogType.Error,
+        "Formatting is currently not supported for Python.",
+        [
+          {
+            label: "Ok",
+            callback() {},
+          },
+        ]
+      );
+      return;
+    }
+    if (selectedSnippetFrameworkLanguage.value === "rust") {
+      codeEditorValue.value = prettier.format(codeEditorValue.value, {
+        parser: "jinx-rust",
+        plugins: [rustPlugin],
+        tabWidth: 4,
+      });
+      return;
+    }
+  } catch (e) {
+    console.log("Prettier Error", e);
+    openDialog(DialogType.Error, `${e}`, [
+      {
+        label: "Ok",
+        callback() {},
+      },
+    ]);
+  }
+};
 
 const createMarkerGroup = () => {
   // Check if last marker group was used
@@ -78,8 +125,6 @@ const animatePrevious = () => {
     codeEditorEl.classList.remove("animate-previous");
   }, 800);
 };
-
-const { openDialog } = useDialogStore();
 
 const onNext = () => {
   if (mode.value == CreationMode.edit) {
@@ -219,21 +264,7 @@ const previousButtonDisabled = computed(() => {
 
                 <div class="space-y-3 text-white/60 font-medium">
                   <p>Snippet Framework / Language</p>
-                  <div class="flex flex-row space-x-4 w-fit rounded-full">
-                    <img
-                      v-for="framework in frameworks"
-                      :key="framework.name"
-                      :src="framework.icon"
-                      :alt="framework.name"
-                      :class="[
-                        'h-9 w-9 rounded-full cursor-pointer transition-all duration-300',
-                        snippetFramework == framework.name
-                          ? 'scale-105 cursor-pointer'
-                          : 'grayscale brightness-75',
-                      ]"
-                      @click="snippetFramework = framework.name"
-                    />
-                  </div>
+                  <framework-selector />
                 </div>
 
                 <div class="space-y-3 text-white/60 font-medium">
@@ -302,10 +333,30 @@ const previousButtonDisabled = computed(() => {
             <p class="text-lg min-w-[30px]">{{ codeEditorValue.length }}</p>
           </div>
           <div
-            class="bg-background flex flex-row items-center rounded-l-sm rounded-r-xl p-2 px-4 space-x-2"
+            class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
           >
             <icon name="system-uicons:paragraph-left" size="2em" />
             <p class="text-lg">{{ codeEditorValue.split("\n").length }}</p>
+          </div>
+
+          <div
+            class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
+          >
+            <icon name="clarity:bolt-line" size="1.35em" />
+            <button
+              @click="formatCode"
+              class="text-lg hover:text-primary active:text-primary/50 transition-all duration-300"
+            >
+              Format
+            </button>
+          </div>
+
+          <div
+            class="bg-background flex flex-row items-center rounded-l-sm rounded-r-xl p-2 px-4 space-x-2"
+          >
+            <div class="scale-90">
+              <framework-selector />
+            </div>
           </div>
         </div>
       </transition>
@@ -461,13 +512,13 @@ const previousButtonDisabled = computed(() => {
   @apply p-0.5 rounded-2xl;
 }
 .snippet-container {
-  @apply rounded-xl w-[1000px] h-[550px];
-  background: linear-gradient(
-      180deg,
-      rgba(0, 0, 0, 0.5) 0%,
-      rgba(0, 0, 0, 0.5) 100%
-    ),
-    linear-gradient(180deg, #000000 0%, #111111 100%);
+  @apply rounded-xl w-[1000px] h-[550px] backdrop-blur-2xl bg-background;
+  /* background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  ); */
+  /* linear-gradient(180deg, #000000 0%, #111111 100%); */
 }
 
 .selection-button-group {
@@ -500,6 +551,7 @@ const previousButtonDisabled = computed(() => {
 
 @keyframes next {
   0% {
+    opacity: 0;
     transform: translateX(0);
   }
   50% {
@@ -510,6 +562,7 @@ const previousButtonDisabled = computed(() => {
     transform: translateX(100%);
   }
   100% {
+    opacity: 1;
     filter: blur(0px);
     transform: translateX(0);
   }
@@ -521,6 +574,7 @@ const previousButtonDisabled = computed(() => {
 
 @keyframes previous {
   0% {
+    opacity: 0;
     transform: translateX(0);
   }
   50% {
@@ -531,6 +585,7 @@ const previousButtonDisabled = computed(() => {
     transform: translateX(-100%);
   }
   100% {
+    opacity: 1;
     filter: blur(0px);
     transform: translateX(0);
   }
