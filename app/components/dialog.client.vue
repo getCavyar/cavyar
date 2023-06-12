@@ -46,7 +46,9 @@ const icon = computed(() => {
           <h3 class="text-white ml-1 mb-5 text-center font-semibold">
             {{ dialogType }}
           </h3>
-          <p class="text-lg text-center">{{ dialogContent }}</p>
+          <p class="text-lg text-center max-h-[60vh] overflow-y-auto">
+            {{ dialogContent }}
+          </p>
         </div>
         <div
           class="w-[90%] absolute bottom-5 left-[5%] flex flex-row space-x-3"
