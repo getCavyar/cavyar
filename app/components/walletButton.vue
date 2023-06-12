@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { storeToRefs } from "pinia";
 import { useWallet } from "solana-wallets-vue";
 import { useConnectWalletStore } from "~~/stores/connectWalletStore";
-import { connection } from "~~/ts/constants";
 
 const { connected, publicKey, disconnecting, wallet, disconnect } = useWallet();
 
@@ -14,15 +12,6 @@ const { showConnectWalletDialog, showConnectedPopup } =
 const openWalletDialog = () => {
   if (!connected.value) showConnectWalletDialog.value = true;
   if (connected.value) showConnectedPopup.value = !showConnectedPopup.value;
-};
-
-// when user connects wallet, fetch balance
-const balance = ref(0);
-const fetchBalance = async () => {
-  if (connected.value && publicKey.value) {
-    const balanceLamports = await connection.getBalance(publicKey.value);
-    balance.value = balanceLamports / LAMPORTS_PER_SOL;
-  }
 };
 </script>
 
@@ -52,7 +41,7 @@ const fetchBalance = async () => {
       <p>{{ publicKey.toString().slice(0, 4) }}</p>
 
       <div>
-        <div class="mx-2 h-6 w-[1.5px] bg-white/10" />
+        <div class="mx-2 h-6 w-[1.5px] bg-white/5" />
       </div>
 
       <div class="flex flex-row items-center justify-center space-x-2">
@@ -67,6 +56,7 @@ const fetchBalance = async () => {
         </Suspense>
       </div>
     </div>
+
     <div
       v-else
       class="flex flex-row items-center justify-center space-x-2 px-6"
@@ -82,7 +72,7 @@ const fetchBalance = async () => {
         class="w-full pointer-events-auto absolute top-12 px-3"
       >
         <nuxt-link
-          to="/me"
+          :to="`/users/${publicKey?.toString()}`"
           class="w-full h-10 pl-3 relative flex flex-row space-x-3 items-center justify-start rounded-lg bg-gray-500/5"
         >
           <icon name="ri:user-smile-fill" size="1.3em" class="text-primary" />
@@ -115,7 +105,7 @@ const fetchBalance = async () => {
 
 <style lang="postcss" scoped>
 .wallet-button {
-  @apply p-0.5 pt-2.5 relative flex items-start justify-center bg-surface border border-white/5 transition-all duration-500;
+  @apply p-0.5 pt-2.5 relative flex items-start justify-center bg-transparent backdrop-blur-2xl border border-white/5 shadow-lg shadow-black/20 transition-all duration-500;
 }
 
 .border-transition {

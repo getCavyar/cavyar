@@ -1,23 +1,85 @@
 <script setup lang="ts">
+import { SigninMessage } from "@/server/utils/signin_message";
 import { useWallet } from "solana-wallets-vue";
 import { Wallet } from "solana-wallets-vue/dist/types";
 import { storeToRefs } from "pinia";
 import { useConnectWalletStore } from "~~/stores/connectWalletStore";
+import base58 from "bs58";
+import { DialogType, useDialogStore } from "~/stores/dialogStore";
 
-const wallet = useWallet();
+const { openDialog } = useDialogStore();
 
 const connectWalletStore = useConnectWalletStore();
 const { showConnectWalletDialog } = storeToRefs(connectWalletStore);
+
+const closeDialog = () => {
+  connectWalletStore.showConnectWalletDialog = false;
+};
+
+const wallet = useWallet();
+const { status, signIn, signOut, getCsrfToken, data: authData } = useAuth();
+
+const handleSignIn = async () => {
+  try {
+    // if (!wallet.connected.value) {
+    //   showConnectWalletDialog.value = true;
+    // }
+
+    const csrf = await getCsrfToken();
+    if (!wallet.publicKey.value || !csrf || !wallet.signMessage.value) return;
+
+    const message = new SigninMessage({
+      domain: window.location.host,
+      publicKey: wallet.publicKey.value.toString(),
+      statement: `Sign this message to authenticate as ${wallet.publicKey.value
+        .toString()
+        .slice(0, 5)}...\n\n`,
+      nonce: csrf,
+    });
+
+    const data = new TextEncoder().encode(message.prepare());
+    const signature = await wallet.signMessage.value(data);
+    const serializedSignature = base58.encode(signature);
+
+    const res = await signIn("credentials", {
+      message: JSON.stringify(message),
+      redirect: false,
+      signature: serializedSignature,
+    });
+    if (res?.error) {
+      openDialog(DialogType.Error, `${res.error}`);
+    }
+    console.log("got here");
+  } catch (error) {
+    console.log(error);
+    openDialog(DialogType.Error, `${error}`);
+  }
+};
 
 const onConnectWallet = async (wlt: Wallet) => {
   showConnectWalletDialog.value = false;
   wallet.select(wlt.adapter.name);
   await wallet.connect();
+
+  if (!wallet.connected.value) {
+    await wallet.connect();
+  }
+
+  handleSignIn();
 };
 
-const closeDialog = () => {
-  connectWalletStore.showConnectWalletDialog = false;
-};
+watch(
+  () => wallet.connected.value,
+  (connected) => {
+    if (connected && status.value === "unauthenticated") {
+      handleSignIn();
+    }
+    if (!connected && status.value === "authenticated") {
+      console.log(authData.value);
+      signOut();
+    }
+  }
+);
 </script>
 
 <template>
