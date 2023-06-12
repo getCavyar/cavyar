@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-export type SnippetFramework = "anchor" | "seahorse" | "typescript";
+export type SnippetFramework = "anchor" | "native" | "seahorse" | "typescript";
 export type Id = string;
 
 export type Snippet = {
