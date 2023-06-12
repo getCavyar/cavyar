@@ -15,8 +15,6 @@ const { markerGroups, markers, selectedMarkerGroup, editor } =
 const addMarker = () => {
   if (!editor.value) return;
 
-  console.log(editor.value._editor);
-
   const range = editor.value._editor.selection.getRange();
 
   // check if there is a marker inside the range
@@ -75,7 +73,6 @@ const removeMarker = () => {
   });
   if (markerToDelete === undefined) return;
 
-  console.log(markerToDelete[1].id);
   const id = markerToDelete[1].id;
   editor.value._editor.session.removeMarker(id);
   //TODO Find a better way to remove the markers asap when I got time.
