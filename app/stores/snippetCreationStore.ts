@@ -74,22 +74,35 @@ export const useSnippetCreationStore = defineStore(
       window.location.reload();
     };
 
-    const frameworks = useState<{ name: SnippetFramework; icon: string }[]>(
-      () => [
-        {
-          name: "anchor" as SnippetFramework,
-          icon: "https://www.anchor-lang.com/_next/image?url=%2Flogo.png&w=64&q=75",
-        },
-        {
-          name: "seahorse" as SnippetFramework,
-          icon: "https://cdn-icons-png.flaticon.com/512/5968/5968381.png",
-        },
-        {
-          name: "typescript" as SnippetFramework,
-          icon: "https://pbs.twimg.com/profile_images/1556384244598964226/S3cx06I2_400x400.jpg",
-        },
-      ]
-    );
+    const frameworks = useState<
+      { name: SnippetFramework; language: string; icon: string }[]
+    >(() => [
+      {
+        name: "anchor" as SnippetFramework,
+        language: "rust",
+        icon: "https://www.anchor-lang.com/_next/image?url=%2Flogo.png&w=64&q=75",
+      },
+      {
+        name: "native" as SnippetFramework,
+        language: "rust",
+        icon: "https://pbs.twimg.com/profile_images/1365435380758163456/MwryCZuw_400x400.png",
+      },
+      {
+        name: "seahorse" as SnippetFramework,
+        language: "python",
+        icon: "https://pbs.twimg.com/profile_images/1556384244598964226/S3cx06I2_400x400.jpg",
+      },
+      {
+        name: "typescript" as SnippetFramework,
+        language: "typescript",
+        icon: "https://cdn-icons-png.flaticon.com/512/5968/5968381.png",
+      },
+    ]);
+
+    const selectedSnippetFrameworkLanguage = computed(() => {
+      return frameworks.value.find((f) => f.name === snippetFramework.value)
+        ?.language;
+    });
 
     const snippetTitle = useSessionStorage("snippetTitle", () => "");
 
@@ -135,6 +148,7 @@ export const useSnippetCreationStore = defineStore(
       snippetFramework,
       snippetTags,
       tagInput,
+      selectedSnippetFrameworkLanguage,
 
       getRandomColor,
       createMarkerGroupClass,
