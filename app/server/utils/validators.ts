@@ -10,7 +10,8 @@ export const postSnippetValidator = (body: POSTSnippet) => {
   if (
     body.framework !== "anchor" &&
     body.framework !== "seahorse" &&
-    body.framework !== "typescript"
+    body.framework !== "typescript" &&
+    body.framework !== "native"
   ) {
     return false;
   }
