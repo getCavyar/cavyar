@@ -4,6 +4,7 @@ export enum DialogType {
   Warning = "Warning",
   Error = "Error",
   Info = "Info",
+  Tip = "Tip The Creator",
 }
 
 export type DialogAction = {
@@ -26,7 +27,9 @@ export const useDialogStore = defineStore("dialogStore", () => {
     actions: DialogAction[] = [
       {
         label: "OK",
-        callback: () => {},
+        callback: () => {
+          closeDialog();
+        },
       },
     ]
   ) => {
@@ -35,14 +38,19 @@ export const useDialogStore = defineStore("dialogStore", () => {
     showDialog.value = true;
     dialogActions.value = actions.map((action) => ({
       ...action,
-      callback: () => {
-        action.callback();
-        closeDialog();
-      },
+      callback:
+        action.callback === closeDialog
+          ? action.callback
+          : () => {
+              action.callback();
+              closeDialog();
+            },
     }));
+    console.log(dialogActions.value); // log the dialogActions array to the console
   };
 
   const closeDialog = () => {
+    console.log("close");
     showDialog.value = false;
   };
 
