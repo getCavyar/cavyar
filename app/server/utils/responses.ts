@@ -3,31 +3,31 @@ export enum DefaultResponses {
   InvalidRequest = "Invalid Request",
 }
 
-export class SuccessResponse {
+export class SuccessResponse<T> {
   statusCode: number;
   message: string;
-  data: string | null;
+  data: T;
 
-  constructor(statusCode: number, message: string, data: string | null) {
+  constructor(statusCode: number, message: string, data: T) {
     this.statusCode = statusCode;
     this.message = message;
     this.data = data;
   }
 
   public static default() {
-    return createError({
+    return {
       statusCode: 200,
       message: "Operation was successful",
       data: null,
-    });
+    };
   }
 
-  public static new(statusCode: number, message: string, data: string | null) {
-    return createError({
+  public static new<T>(statusCode: number, message: string, data: T) {
+    return {
       statusCode: statusCode,
       message: message,
       data: data,
-    });
+    };
   }
 }
 
@@ -55,6 +55,22 @@ export class ErrorResponse {
       statusCode: statusCode,
       message: message,
       data: data,
+    });
+  }
+
+  public static unauthorized() {
+    return createError({
+      statusCode: 401,
+      message: "Unauthorized",
+      data: null,
+    });
+  }
+
+  public static notFound() {
+    return createError({
+      statusCode: 404,
+      message: "Not Found",
+      data: null,
     });
   }
 }
