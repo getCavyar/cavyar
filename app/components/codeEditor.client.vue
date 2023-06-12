@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import prism from "prismjs";
 import { storeToRefs } from "pinia";
 import { Ace, Range } from "ace-builds";
 import { VAceEditor } from "vue3-ace-editor";
@@ -34,7 +33,8 @@ const value = computed({
   },
 });
 
-const { markerGroups, mode, editor } = storeToRefs(useSnippetCreationStore());
+const { markerGroups, mode, editor, selectedSnippetFrameworkLanguage } =
+  storeToRefs(useSnippetCreationStore());
 
 const editorInit = (initEditor: VAceEditorInstance) => {
   editor.value = initEditor;
@@ -104,7 +104,7 @@ const handleClick = (event: MouseEvent) => {
     ref="editor"
     @click="handleClick"
     v-model:value="value"
-    lang="rust"
+    :lang="selectedSnippetFrameworkLanguage"
     :readonly="readOnly"
     theme="monokai"
     :wrap="true"
