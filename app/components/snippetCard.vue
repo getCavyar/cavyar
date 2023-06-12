@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { getAvatar } from "~/ts/utils";
 import { Snippet } from "~~/ts/types";
-import { generateAvatar } from "~~/ts/utils";
+// import { generateAvatar } from "~~/ts/utils";
 
 defineProps<{
   snippet: Snippet;
@@ -27,7 +28,7 @@ defineProps<{
       <div class="w-full flex flex-row items-center space-x-2">
         <img
           class="h-5 w-5 rounded-full"
-          :src="generateAvatar(snippet.creator)"
+          :src="getAvatar(snippet.creator)"
           alt=""
         />
         <p class="text-sm text-white/80">

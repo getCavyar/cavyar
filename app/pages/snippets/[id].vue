@@ -1,44 +1,56 @@
 <script setup lang="ts">
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
+import { useWallet } from "solana-wallets-vue";
+import { DialogType, useDialogStore } from "~/stores/dialogStore";
+import { connection } from "~/ts/constants";
+import { Snippet } from "~/ts/types";
+import { getAvatar } from "~/ts/utils";
 import { useSnippetCreationStore } from "~~/stores/snippetCreationStore";
-import { generateAvatar } from "~~/ts/utils";
+
+const { sendTransaction, publicKey } = useWallet();
+
+const { data: userData } = useAuth();
 
 const route = useRoute();
 
-const { data, pending } = await useAsyncData("snippet", () =>
-  $fetch(`/api/snippets/${route.params.id}`)
+const {
+  data: snippet,
+  pending,
+  error,
+} = await useAsyncData(
+  "snippet",
+  () => $fetch(`/api/snippets/${route.params.id}`),
+  {
+    transform: (value) => {
+      return value.data as Snippet;
+    },
+  }
 );
 
 const copyCode = (code: string) => {
   navigator.clipboard.writeText(code);
 };
 
-const { frameworks } = useSnippetCreationStore();
+const { frameworks, selectedSnippetFrameworkLanguage } =
+  useSnippetCreationStore();
 
 const frameworkIcon = computed(
-  () => frameworks.filter((f) => f.name == data.value?.framework)[0].icon
+  () => frameworks.filter((f) => f.name == snippet.value?.framework)[0].icon
 );
-
-const codeLanguage = computed(() => {
-  switch (data.value?.framework) {
-    case "anchor":
-      return "rust";
-    case "seahorse":
-      return "python";
-    case "typescript":
-      return "typescript";
-    default:
-      return "rust";
-  }
-});
 
 const regex = /\${\d+:(.+?)}/g;
 const prettyCode = computed(() => {
-  if (!data.value?.code) return;
-  const matches = data.value.code.matchAll(regex);
+  if (!snippet.value?.code) return;
+  const matches = snippet.value.code.matchAll(regex);
   for (const match of matches) {
-    data.value.code = data.value?.code.replace(match[0], match[1]);
+    snippet.value.code = snippet.value?.code.replace(match[0], match[1]);
   }
-  return data.value?.code;
+  return snippet.value?.code;
 });
 
 const shortenCreatorAddress = (name: string) => {
@@ -54,41 +66,158 @@ const formatDate = (milliseconds: number) => {
   };
   return date.toLocaleDateString(undefined, options);
 };
+
+const alreadyLiked = computed(() => {
+  return snippet.value?.likes.includes(userData.value?.user?.name ?? "");
+});
+
+const likeSnippet = async () => {
+  try {
+    const res = await $fetch(
+      `/api/snippets/${snippet.value?._id.toString()}/like`,
+      {
+        method: "POST",
+      }
+    );
+    if (res.statusCode == 200) {
+      snippet.value = res.data;
+    }
+    console.log(res);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const { openDialog } = useDialogStore();
+
+const tipCreator = () => {
+  openDialog(
+    DialogType.Tip,
+    "Did this snippet help you? Tip the creator to show your appreciation! ♥️",
+    [1, 2.5, 5, 10].map((amount) => {
+      return {
+        label: `$${amount}`,
+        callback: () => tipInSol(amount),
+      };
+    })
+  );
+};
+
+const calculateTip = (usd: number, price: number) => {
+  const lamportsPerUsd = Math.round((LAMPORTS_PER_SOL / price) * 100) / 100;
+  const lamports = Math.round(usd * lamportsPerUsd);
+  console.log(lamports);
+  return lamports;
+};
+
+const tipInSol = async (usd: number) => {
+  if (!publicKey.value || !snippet?.value?.creator) return;
+
+  const res = await $fetch("/api/solana-price");
+
+  const tx = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: publicKey.value,
+      toPubkey: new PublicKey(snippet.value.creator),
+      lamports: calculateTip(usd, res.data),
+    })
+  );
+
+  await sendTransaction(tx, connection);
+};
+
+const deleteSnippet = () => {
+  openDialog(
+    DialogType.Warning,
+    "Are you sure you want to delete this snippet?",
+    [
+      {
+        label: "Cancel",
+        callback: () => {},
+      },
+      {
+        label: "Yes",
+        callback: async () => {
+          try {
+            const res = await $fetch(
+              `/api/snippets/${snippet.value?._id.toString()}/delete`,
+              {
+                method: "DELETE",
+              }
+            );
+            if (res.statusCode == 200) {
+              navigateTo("/snippets");
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        },
+      },
+    ]
+  );
+};
 </script>
 
 <template>
-  <div class="pt-16 relative" v-if="!pending && data !== null">
+  <div class="pt-16 relative" v-if="!pending && snippet !== null">
     <div
-      class="w-[12vw] fixed top-28 left-10 flex flex-col items-start justify-start border-r-2 border-white/10"
+      class="w-[12vw] fixed top-28 left-10 flex flex-col items-start justify-start border-r-2 border-white/10 py-2"
     >
-      <div class="flex flex-row items-end justify-center space-x-3">
+      <nuxt-link
+        :to="`/users/${userData?.user?.name}`"
+        :prefetch="true"
+        class="flex flex-row items-end justify-center space-x-3"
+      >
         <img
-          :src="generateAvatar(data.creator)"
+          :src="getAvatar(snippet.creator)"
           alt=""
-          class="h-6 w-6 rounded-sm"
+          class="h-5 w-5 rounded-sm"
         />
         <p class="text-white/60 text-sm">
-          {{ shortenCreatorAddress(data.creator) }}
+          {{ shortenCreatorAddress(snippet.creator) }}
         </p>
-      </div>
+      </nuxt-link>
 
-      <div
-        class="mt-5 flex flex-row items-center justify-center space-x-3 text-white/60"
+      <button
+        class="mt-3 flex flex-row items-center justify-center space-x-2 text-red-800 hover:underline"
+        @click="deleteSnippet"
       >
-        <icon name="line-md:heart-twotone" size="1.5em" />
-        <p class="text-white/60 text-sm">{{ data.likes.length }}</p>
-      </div>
+        <icon name="line-md:cancel-twotone" size="1.5em" />
+        <p class="text-white/60 text-sm">Delete</p>
+      </button>
+
+      <button
+        class="mt-3 flex flex-row items-center justify-center space-x-3 text-white/60"
+        @click="likeSnippet()"
+      >
+        <icon
+          name="line-md:heart-twotone"
+          size="1.5em"
+          :class="[alreadyLiked ? 'text-red-800' : 'text-white/60']"
+        />
+        <p class="text-white/60 text-sm">{{ snippet.likes.length }}</p>
+      </button>
 
       <div
         class="mt-3 flex flex-row items-center justify-center space-x-3 text-white/60"
       >
         <icon name="line-md:calendar" size="1.5em" />
-        <p class="text-white/60 text-sm">{{ formatDate(data.createdAt) }}</p>
+        <p class="text-white/60 text-sm">
+          {{ formatDate(snippet.createdAt) }}
+        </p>
       </div>
+
+      <button
+        class="mt-3 -ml-0.5 flex flex-row items-center justify-center space-x-2.5 text-white/60"
+        @click="tipCreator"
+      >
+        <icon name="line-md:buy-me-a-coffee-twotone" size="1.6em" />
+        <p class="text-white/60 text-sm">Tip Creator</p>
+      </button>
 
       <div class="flex flex-wrap mt-5 text-white/60">
         <div
-          v-for="tag in data.tags"
+          v-for="tag in snippet.tags"
           :key="tag"
           class="px-2 py-1 mr-2 mb-2 bg-primary/10 rounded-sm text-xs"
         >
@@ -101,19 +230,21 @@ const formatDate = (milliseconds: number) => {
       class="w-[65vw] p-10 space-y-5 flex flex-col items-start justify-start left-1/2 -translate-x-1/2 absolute"
     >
       <div class="flex flex-row items-center justify-center space-x-3">
-        <img :src="frameworkIcon" alt="" class="h-8 w-8" />
-        <h3>{{ data.title }}</h3>
+        <img :src="frameworkIcon" alt="" class="h-8 w-8 rounded-full" />
+        <h3>{{ snippet.title }}</h3>
       </div>
-      <p class="pb-2">{{ data.description }}</p>
+      <p class="pb-2">{{ snippet.description }}</p>
 
-      <div class="gradient-border w-full rounded-xl relative">
+      <div class="gradient-border w-full rounded-2xl relative">
         <icon
-          @click="copyCode(data!.code)"
+          @click="copyCode(snippet!.code)"
           name="line-md:clipboard-check-twotone-to-clipboard-twotone-transition"
           size="1.4em"
           class="absolute right-2 top-2 z-10 cursor-pointer rounded-full text-primary/60 hover:text-primary/100 transition-all duration-300 active:text-secondary"
         />
-        <prism :language="codeLanguage">{{ prettyCode }}</prism>
+        <Prism :language="selectedSnippetFrameworkLanguage">
+          {{ prettyCode }}
+        </Prism>
       </div>
 
       <div class="pt-10">
@@ -124,7 +255,9 @@ const formatDate = (milliseconds: number) => {
         </p>
         <p class="mt-7 mb-5 py-3 px-4 border-[2px] border-white/10 rounded-xl">
           <span class="typewriter-effect" style="--n: 1000">
-            {{ data.aiExplanation ?? "No explanation available at the moment" }}
+            {{
+              snippet.aiExplanation ?? "No explanation available at the moment"
+            }}
           </span>
         </p>
         <div class="flex flex-row w-full space-x-3 grayscale">
@@ -144,7 +277,7 @@ const formatDate = (milliseconds: number) => {
       </div>
     </div>
   </div>
-  <div v-else>Loading...</div>
+  <div v-else>{{ error ?? "Loading..." }}</div>
 </template>
 
 <style lang="postcss" scoped>
