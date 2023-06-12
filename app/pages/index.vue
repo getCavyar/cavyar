@@ -1,26 +1,26 @@
 <script setup lang="ts">
 import { Snippet } from "~~/ts/types";
-import BounceLoader from "vue-spinner/src/BounceLoader.vue";
-import { BSON, deserialize } from "mongodb";
-import { json } from "stream/consumers";
 
-const { data } = await useAsyncData("snippets", () => $fetch("/api/snippets"), {
-  transform: (value) => {
-    console.log(value.snippets as unknown as Snippet[]);
-    return value.snippets as unknown as Snippet[];
-  },
-});
+const { data: snippets } = await useAsyncData(
+  "snippets",
+  () => $fetch("/api/snippets"),
+  {
+    transform: (value) => {
+      // @ts-ignore
+      return value.data as Snippet[];
+    },
+  }
+);
 
 const trendingSnippets = computed(() => {
-  return data.value?.sort((a, b) => b.likes.length - a.likes.length);
+  return snippets.value?.sort((a, b) => b.likes.length - a.likes.length);
 });
 
 const recentSnippets = computed(() => {
-  return data.value?.sort(
+  return snippets.value?.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 });
-
 const search = reactive({
   focused: false,
   query: "",
@@ -36,7 +36,8 @@ const querySnippets = useDebounceFn(async (query: string) => {
       const { data: snippets } = await useFetch("/api/snippets", {
         query: { query },
         transform: (value) => {
-          return value.snippets as unknown as Snippet[];
+          // @ts-ignore
+          return value.data as Snippet[];
         },
       });
       search.results = snippets.value!;
@@ -49,56 +50,92 @@ const querySnippets = useDebounceFn(async (query: string) => {
   }
 }, 300);
 
-const maxHeight = useState(() => 0);
-
-const enter = (el: any) => {
-  maxHeight.value = el.scrollHeight;
-};
-const beforeLeave = (el: any) => {
-  maxHeight.value = el.scrollHeight;
-};
-const leave = () => {
-  maxHeight.value = 0;
+const getSpanWithHighlightedText = (
+  text: string,
+  query: string,
+  className: string
+) => {
+  const regex = new RegExp(query, "gi");
+  const match = text.match(regex);
+  if (!match) return text;
+  const highlightedText = text.replace(
+    regex,
+    `<span class="${className}">$&</span>`
+  );
+  return highlightedText;
 };
 </script>
 
 <template>
   <nuxt-layout name="index">
     <template #content>
-      <div class="radial-gradient pb-5 h-screen w-screen fixed z-0 flex">
+      <div
+        class="radial-gradient pb-5 h-screen w-screen fixed z-0 flex"
+        @click="search.focused = false"
+      >
         <div
           :class="[
-            'w-full flex items-center justify-center flex-col space-y-8 transition-all duration-500',
+            'w-full flex items-center justify-center flex-col space-y-2 transition-all duration-500',
             search.focused ? 'mb-[calc(50vh-80px)]' : 'pt-0',
           ]"
         >
-          <img
+          <!-- <img
             src="@/assets/images/logo_white.png"
             :class="[
               'transition-all duration-700',
               search.focused ? 'h-10' : 'h-12',
             ]"
-          />
+          /> -->
+
+          <h1
+            :class="[
+              'font-extrabold tracking-wider transition-all duration-700',
+              search.focused ? 'text-[60px]' : 'text-[70px]',
+            ]"
+          >
+            CAVYAR
+          </h1>
+
           <div
-            class="w-1/2 max-w-3xl h-16 relative flex items-center justify-center group transition-all"
+            class="w-1/2 max-w-3xl h-16 relative flex items-center justify-center group-scoped transition-all"
           >
             <input
-              class="w-full h-full pl-16 py-1 px-4 text-white text-lg font-medium bg-black/60 backdrop-blur-2xl rounded-xl shadow-xl shadow-black/40 border border-transparent hover:border-primary focus:border-primary transition-all duration-500"
+              :class="[
+                'w-full h-full pl-16 py-1 px-4 text-white text-lg font-medium group-scoped-focus-within:w-[calc(100%-50px)] focus:bg-background placeholder:text-white/40 backdrop-blur-2xl rounded-xl shadow-lg shadow-black/20 border hover:border-primary focus:border-primary transition-all duration-500',
+                search.focused
+                  ? 'bg-background border-primary'
+                  : 'bg-black/40 border-transparent',
+              ]"
               placeholder="PDA Signer Anchor..."
-              @focus="() => (search.focused = true)"
-              @blur="() => (search.focused = false)"
-              @input="() => querySnippets(search.query)"
+              @input="
+                () => {
+                  querySnippets(search.query);
+                }
+              "
+              @click="
+                (e) => {
+                  search.focused = true;
+                  e.stopPropagation();
+                }
+              "
               v-model="search.query"
             />
             <icon
               name="line-md:search"
               size="1.4em"
-              class="mb-0.5 absolute left-5 text-white group-hover:text-primary transition-all duration-500"
+              class="mb-0.5 absolute left-5 group-scoped-focus-within:left-12 text-[#5A6060] group-scoped-focus-within:text-primary group-scoped-hover:text-primary transition-all duration-500"
             />
+            <p
+              v-if="search.results.length > 0"
+              class="mb-0.5 absolute right-5 text-[#5A6060] transition-all duration-500"
+            >
+              {{ search.results.length }} Results
+            </p>
             <transition name="blur-up">
               <div
-                class="gradient-border p-[1.5px] w-full absolute top-20 rounded-xl"
+                class="gradient-border p-[1.5px] w-full absolute top-20 rounded-xl group-scoped-focus-within:w-[calc(100%-50px)] transition-all duration-500"
                 v-if="search.focused"
+                @click="(e) => e.stopPropagation()"
               >
                 <div v-if="search.results.length === 0">
                   <div
@@ -112,31 +149,55 @@ const leave = () => {
                         size="30px"
                         class="text-gray-200"
                       />
-                      <p>No results found</p>
+                      <p v-if="isFetching">Searching...</p>
+                      <p v-if="search.query.length > 0 && !isFetching">
+                        No results found
+                      </p>
+                      <p v-if="search.query.length === 0">
+                        Search for snippets by title, description, or tags
+                      </p>
                     </div>
                   </div>
                 </div>
-                <transition
-                  name="height-transition"
-                  @enter="enter"
-                  @before-leave="beforeLeave"
-                  @leave="leave"
+                <div
+                  v-if="search.results.length > 0"
+                  class="bg-background w-full h-auto max-h-[50vh] overflow-y-auto rounded-[11px] shadow-black shadow-2xl transition-all duration-500 py-1"
                 >
-                  <div
-                    class="bg-background w-full h-auto rounded-[11px] shadow-black shadow-2xl transition-all duration-500"
-                    :style="{ maxHeight: `${maxHeight}px` }"
-                  >
-                    <transition-group name="snippets-search-list" tag="div">
+                  <transition-group name="snippets-search-list" tag="div">
+                    <nuxt-link
+                      v-for="result in search.results"
+                      :key="result._id.toString()"
+                      :to="`/snippets/${result._id.toString()}`"
+                      class="w-full py-5 h-fit flex flex-col items-start justify-start pl-5 text-white text-lg font-medium transition-all duration-75 relative group"
+                    >
                       <div
-                        v-for="result in search.results"
-                        :key="result._id"
-                        class="w-full h-12 flex items-center justify-start pl-5 text-white text-lg font-medium hover:bg-primary/20 transition-all duration-500"
+                        class="text-white/30 group-hover:block hidden absolute right-5 top-1/2 transform -translate-y-1/2"
                       >
-                        {{ result.title }}
+                        <icon name="line-md:chevron-right" size="1.4em" />
                       </div>
-                    </transition-group>
-                  </div>
-                </transition>
+
+                      <div
+                        v-html="
+                          getSpanWithHighlightedText(
+                            result.title,
+                            search.query,
+                            'text-primary'
+                          )
+                        "
+                      />
+                      <p
+                        class="text-base text-white/40 truncate overflow-hidden overflow-ellipsis w-full pr-10"
+                        v-html="
+                          getSpanWithHighlightedText(
+                            result.description,
+                            search.query,
+                            'bg-white/[0.15]'
+                          )
+                        "
+                      />
+                    </nuxt-link>
+                  </transition-group>
+                </div>
               </div>
             </transition>
           </div>
@@ -179,13 +240,5 @@ const leave = () => {
     rgb(var(--primary)),
     rgb(var(--secondary))
   );
-}
-
-.height-transition-enter-active,
-.height-transition-leave-active {
-  transition: max-height 0.5s;
-}
-.height-transition-leave-to {
-  max-height: 0;
 }
 </style>
