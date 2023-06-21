@@ -1,5 +1,5 @@
 import base58 from "bs58";
-import nacl from "tweetnacl";
+import { sign } from "tweetnacl";
 
 type SignMessage = {
   domain: string;
@@ -25,12 +25,12 @@ export class SigninMessage {
     return `${this.statement}${this.nonce}`;
   }
 
-  async validate(signature: string) {
+  validate(signature: string) {
     const msg = this.prepare();
     const signatureUint8 = base58.decode(signature);
     const msgUint8 = new TextEncoder().encode(msg);
     const pubKeyUint8 = base58.decode(this.publicKey);
 
-    return nacl.sign.detached.verify(msgUint8, signatureUint8, pubKeyUint8);
+    return sign.detached.verify(msgUint8, signatureUint8, pubKeyUint8);
   }
 }

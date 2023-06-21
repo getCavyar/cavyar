@@ -22,7 +22,6 @@ export default defineEventHandler(async (event) => {
       snippet
     );
   } catch (error) {
-    console.log(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });

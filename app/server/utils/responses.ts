@@ -24,9 +24,9 @@ export class SuccessResponse<T> {
 
   public static new<T>(statusCode: number, message: string, data: T) {
     return {
-      statusCode: statusCode,
-      message: message,
-      data: data,
+      statusCode,
+      message,
+      data,
     };
   }
 }
@@ -52,9 +52,9 @@ export class ErrorResponse {
 
   public static new(statusCode: number, message: string, data: string | null) {
     return createError({
-      statusCode: statusCode,
-      message: message,
-      data: data,
+      statusCode,
+      message,
+      data,
     });
   }
 

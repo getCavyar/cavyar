@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { MongoClient, ServerApiVersion } from "mongodb";
 import { Snippet } from "~~/ts/types";
 
@@ -10,11 +11,11 @@ export const client = new MongoClient(uri, {
 export const db = client.db("Snippid");
 export const snippetsRef = db.collection<Snippet>("snippets");
 
-export default defineNitroPlugin((nitroApp) => {
+export default defineNitroPlugin(() => {
   try {
     client.connect();
-    console.log("Connected to MongoDB");
+    console.log("🌲 Connected to MongoDB");
   } catch (err) {
-    console.log("Error connecting to MongoDB", err);
+    console.log("🚨 Error connecting to MongoDB", err);
   }
 });

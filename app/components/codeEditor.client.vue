@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { Ace, Range } from "ace-builds";
+import { Range } from "ace-builds";
 import { VAceEditor } from "vue3-ace-editor";
 import { VAceEditorInstance } from "vue3-ace-editor/types";
 import { useSelectionMenuStore } from "~~/stores/selectionMenuStore";
@@ -46,7 +46,7 @@ const editorInit = (initEditor: VAceEditorInstance) => {
   // });
   markerGroups.value.forEach((group) => {
     // Restore classes
-    var style = document.createElement("style");
+    const style = document.createElement("style");
     style.innerHTML = `#${group.id} { color: ${group.color}; }`;
     style.innerHTML = `.${group.id} { background-color: ${group.color}70; position: absolute; z-index: 100; }`;
     document.getElementsByTagName("head")[0].appendChild(style);
@@ -60,7 +60,7 @@ const editorInit = (initEditor: VAceEditorInstance) => {
         ),
         markerGroups.value.filter((group) =>
           group.markers.some(
-            (markerFromGroup) => markerFromGroup.id == marker.id
+            (markerFromGroup) => markerFromGroup.id === marker.id
           )
         )[0].id,
         "text",
@@ -102,7 +102,6 @@ const handleClick = (event: MouseEvent) => {
   <!-- @init="editorInit" -->
   <VAceEditor
     ref="editor"
-    @click="handleClick"
     v-model:value="value"
     :lang="selectedSnippetFrameworkLanguage"
     :readonly="readOnly"
@@ -115,6 +114,7 @@ const handleClick = (event: MouseEvent) => {
       background-color: transparent;
       color: rgba(255, 255, 255, 0.85);
     "
+    @click="handleClick"
   />
 </template>
 

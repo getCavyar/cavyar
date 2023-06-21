@@ -22,7 +22,7 @@ export const compareSnippet = (
     "code",
   ];
 
-  for (let property of properties) {
+  for (const property of properties) {
     const aMatch = String(a[property]).toLowerCase().includes(queryLower);
     const bMatch = String(b[property]).toLowerCase().includes(queryLower);
 

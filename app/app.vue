@@ -1,8 +1,8 @@
 <template>
   <div class="relative">
     <lazy-wallet-dialog />
-    <lazy-dialog />
-    <appbar />
+    <lazy-reusable-dialog />
+    <dynamic-appbar />
     <NuxtPage />
   </div>
 </template>

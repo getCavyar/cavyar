@@ -48,7 +48,7 @@ export const useSnippetCreationStore = defineStore(
     const createMarkerGroupClass = (id: string) => {
       const color = getRandomColor();
       // create a new class
-      var style = document.createElement("style");
+      const style = document.createElement("style");
       style.innerHTML = `#${id} { color: ${color}; }`;
       style.innerHTML = `.${id} { background-color: ${color}70; position: absolute; z-index: 100; }`;
       document.getElementsByTagName("head")[0].appendChild(style);
@@ -59,9 +59,9 @@ export const useSnippetCreationStore = defineStore(
     };
 
     const getRandomColor = () => {
-      var letters = "0123456789ABCDEF";
-      var color = "#";
-      for (var i = 0; i < 6; i++) {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
         color += letters[Math.floor(Math.random() * 16)];
       }
       return color;

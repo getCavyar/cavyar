@@ -66,6 +66,7 @@ const getSpanWithHighlightedText = (
 };
 </script>
 
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <nuxt-layout name="index">
     <template #content>
@@ -100,6 +101,7 @@ const getSpanWithHighlightedText = (
             class="w-1/2 max-w-3xl h-16 relative flex items-center justify-center group-scoped transition-all"
           >
             <input
+              v-model="search.query"
               :class="[
                 'w-full h-full pl-16 py-1 px-4 text-white text-lg font-medium group-scoped-focus-within:w-[calc(100%-50px)] focus:bg-background placeholder:text-white/40 backdrop-blur-2xl rounded-xl shadow-lg shadow-black/20 border hover:border-primary focus:border-primary transition-all duration-500',
                 search.focused
@@ -118,7 +120,6 @@ const getSpanWithHighlightedText = (
                   e.stopPropagation();
                 }
               "
-              v-model="search.query"
             />
             <icon
               name="line-md:search"
@@ -126,18 +127,18 @@ const getSpanWithHighlightedText = (
               class="mb-0.5 absolute left-5 group-scoped-focus-within:left-12 text-[#5A6060] group-scoped-focus-within:text-primary group-scoped-hover:text-primary transition-all duration-500"
             />
             <p
-              v-if="search.results.length > 0"
+              v-if="search.results?.length > 0"
               class="mb-0.5 absolute right-5 text-[#5A6060] transition-all duration-500"
             >
               {{ search.results.length }} Results
             </p>
             <transition name="blur-up">
               <div
-                class="gradient-border p-[1.5px] w-full absolute top-20 rounded-xl group-scoped-focus-within:w-[calc(100%-50px)] transition-all duration-500"
                 v-if="search.focused"
+                class="gradient-border p-[1.5px] w-full absolute top-20 rounded-xl group-scoped-focus-within:w-[calc(100%-50px)] transition-all duration-500"
                 @click="(e) => e.stopPropagation()"
               >
-                <div v-if="search.results.length === 0">
+                <div v-if="search.results?.length === 0">
                   <div
                     class="bg-background rounded-[11px] p-12 shadow-black shadow-2xl w-full h-12 flex items-center justify-center text-white text-lg font-medium"
                   >
@@ -160,7 +161,7 @@ const getSpanWithHighlightedText = (
                   </div>
                 </div>
                 <div
-                  v-if="search.results.length > 0"
+                  v-if="search.results?.length > 0"
                   class="bg-background w-full h-auto max-h-[50vh] overflow-y-auto rounded-[11px] shadow-black shadow-2xl transition-all duration-500 py-1"
                 >
                   <transition-group name="snippets-search-list" tag="div">

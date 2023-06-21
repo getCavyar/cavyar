@@ -1,5 +1,5 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-import NodeModulesPolyfillPlugin from "@esbuild-plugins/node-modules-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import inject from "@rollup/plugin-inject";
 
 export default defineNuxtConfig({
@@ -78,7 +78,7 @@ export default defineNuxtConfig({
         buffer: true,
         process: true,
       }),
-      NodeModulesPolyfillPlugin(),
+      NodeModulesPolyfillPlugin({}),
     ],
     server: {
       hmr: {

@@ -1,5 +1,4 @@
 import { compareSnippet } from "~/server/utils/sorting";
-
 import { snippetsRef } from "~~/server/plugins/mongodb";
 import { Snippet } from "~~/ts/types";
 
@@ -30,14 +29,16 @@ export default defineEventHandler(async (event) => {
         compareSnippet(a, b, queryLower)
       );
 
-      return {
-        snippets,
-      };
+      return SuccessResponse.new<Snippet[]>(
+        200,
+        "Operation was successful",
+        snippets
+      );
     } else {
       // No query provided - return 15 snippets
       const snippets = await snippetsRef
         .find({})
-        // .sort({ createdAt: -1 })
+        .sort({ createdAt: -1 }) // newest first
         .limit(15)
         .toArray();
 
@@ -48,7 +49,6 @@ export default defineEventHandler(async (event) => {
       );
     }
   } catch (error) {
-    console.log(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });

@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useDialogStore, DialogType } from "~~/stores/dialogStore";
+import { useDialogStore } from "~~/stores/dialogStore";
 
 const dialogStore = useDialogStore();
 const { showDialog, dialogContent, dialogType, dialogActions } =
   storeToRefs(dialogStore);
 
-const icon = computed(() => {
-  switch (dialogType.value) {
-    case DialogType.Error:
-      return "line-md:alert-circle-twotone";
-    case DialogType.Info:
-      return "";
-    case DialogType.Warning:
-      return "line-md:alert";
-    default:
-      return "";
-  }
-});
+// const icon = computed(() => {
+//   switch (dialogType.value) {
+//     case DialogType.Error:
+//       return "line-md:alert-circle-twotone";
+//     case DialogType.Info:
+//       return "";
+//     case DialogType.Warning:
+//       return "line-md:alert";
+//     default:
+//       return "";
+//   }
+// });
 </script>
 
 <template>
@@ -27,13 +27,13 @@ const icon = computed(() => {
     <!-- We need 2 seperate transitions here for cleaner animations -->
     <transition name="fade">
       <div
-        v-if="showDialog"
+        v-if="showDialog == true"
         class="dialog-backdrop"
         @click="dialogStore.closeDialog()"
       />
     </transition>
     <transition name="dialog">
-      <div v-if="showDialog" class="dialog-border z-50 relative">
+      <div v-if="showDialog == true" class="dialog-border z-50 relative">
         <!-- TODO -->
         <!-- <icon
           name="line-md:alert"
@@ -56,8 +56,8 @@ const icon = computed(() => {
           <button
             v-for="action in dialogActions"
             :key="action.label"
-            @click="action.callback"
             class="w-full py-2 font-medium border-[1.5px] border-white/10 rounded-2xl active:scale-95 hover:scale-[1.03] duration-500 hover:text-primary"
+            @click="action.callback"
           >
             {{ action.label }}
           </button>
@@ -71,6 +71,7 @@ const icon = computed(() => {
 .dialog-backdrop {
   @apply h-screen w-screen fixed left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-40 flex items-center justify-center bg-black/20 backdrop-blur-lg;
 }
+
 .dialog-border {
   background: linear-gradient(
     200deg,

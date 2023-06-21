@@ -19,6 +19,7 @@ defineProps<{
     <div class="flex flex-wrap items-start justify-start">
       <p
         v-for="tag in snippet.tags"
+        :key="tag"
         class="px-2 py-1 mt-1.5 mr-1.5 bg-white/5 rounded-md text-sm border border-white/10 h-8 w-max"
       >
         {{ tag }}

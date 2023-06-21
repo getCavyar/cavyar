@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
     const id = event.context.params?.id;
 
     const session = await isAuthenticated(event);
-    console.log(session.user);
+
     if (session.user?.name === undefined || session.user?.name === null) {
       throw ErrorResponse.unauthorized();
     }
@@ -36,7 +36,6 @@ export default defineEventHandler(async (event) => {
       updatedSnippet
     );
   } catch (error) {
-    console.log(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });

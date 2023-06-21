@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { SigninMessage } from "@/server/utils/signin_message";
 import { useWallet } from "solana-wallets-vue";
 import { Wallet } from "solana-wallets-vue/dist/types";
 import { storeToRefs } from "pinia";
-import { useConnectWalletStore } from "~~/stores/connectWalletStore";
 import base58 from "bs58";
+import { useConnectWalletStore } from "~~/stores/connectWalletStore";
+import { SigninMessage } from "@/server/utils/signin_message";
 import { DialogType, useDialogStore } from "~/stores/dialogStore";
 
 const { openDialog } = useDialogStore();
@@ -49,8 +49,8 @@ const handleSignIn = async () => {
     if (res?.error) {
       openDialog(DialogType.Error, `${res.error}`);
     }
-    console.log("got here");
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.log(error);
     openDialog(DialogType.Error, `${error}`);
   }
@@ -68,9 +68,28 @@ const onConnectWallet = async (wlt: Wallet) => {
   handleSignIn();
 };
 
+onMounted(async () => {
+  if (
+    wallet.connected.value &&
+    wallet.publicKey.value?.toString() !== authData.value?.user?.name
+  ) {
+    await handleSignIn();
+  }
+});
+
 watch(
   () => wallet.connected.value,
-  (connected) => {
+  async (connected) => {
+    if (
+      wallet.publicKey.value &&
+      authData.value &&
+      wallet.publicKey.value?.toString() !== authData.value?.user?.name
+    ) {
+      await signOut();
+    }
+    if (!authData.value && wallet.publicKey.value) {
+      await handleSignIn();
+    }
     if (connected && status.value === "unauthenticated") {
       handleSignIn();
     }
@@ -106,8 +125,8 @@ watch(
             <button
               v-for="wlt in wallet.wallets.value"
               :key="wlt.adapter.name"
-              @click="onConnectWallet(wlt)"
               class="w-full px-4 py-4 rounded-xl flex flex-row items-center justify-between bg-gradient-to-br from-surface/50 to-surface transition-all duration-500 hover:-translate-y-1 hover:scale-105 active:scale-100 active:translate-y-1"
+              @click="onConnectWallet(wlt)"
             >
               <div class="flex flex-row items-center justify-center space-x-5">
                 <img

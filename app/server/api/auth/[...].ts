@@ -1,7 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NuxtAuthHandler } from "#auth";
 import { SigninMessage } from "~/server/utils/signin_message";
-import { RequestInternal } from "next-auth";
 import { getAvatar } from "~/ts/utils";
 
 const config = useRuntimeConfig();
@@ -30,7 +29,6 @@ export default NuxtAuthHandler({
       // req: Pick<RequestInternal, "body" | "query" | "headers" | "method">
       async authorize(credentials: any, req: any) {
         try {
-          console.log("Started Auth");
           const signinMessage = new SigninMessage(
             JSON.parse(credentials?.message || "{}")
           );
@@ -41,7 +39,6 @@ export default NuxtAuthHandler({
           }
 
           const csrfToken: string = req.body?.csrfToken;
-          console.log("CSRF TOKEN", csrfToken);
 
           if (signinMessage.nonce !== csrfToken) {
             return null;
@@ -58,15 +55,13 @@ export default NuxtAuthHandler({
             id: signinMessage.publicKey,
           };
         } catch (e) {
-          console.log("ERROR", e);
           return null;
         }
       },
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
-      console.log("Get Session 1");
+    session({ session, token }) {
       // @ts-ignore
       session.publicKey = token.sub;
       if (session.user) {

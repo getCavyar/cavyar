@@ -1,5 +1,5 @@
-import { getServerSession } from "#auth";
 import { ObjectId } from "mongodb";
+import { getServerSession } from "#auth";
 import { snippetsRef } from "~/server/plugins/mongodb";
 
 export default defineEventHandler(async (event) => {
@@ -25,7 +25,6 @@ export default defineEventHandler(async (event) => {
 
     return SuccessResponse.default();
   } catch (error) {
-    console.error(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });

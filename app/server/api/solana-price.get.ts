@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const res = await fetch(
       "https://pro-api.coinmarketcap.com/v2/tools/price-conversion?id=5426&amount=1&convert=USD",
@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
       data.quote.USD.price
     );
   } catch (error) {
-    console.error(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });

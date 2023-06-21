@@ -134,3 +134,18 @@ h5 {
   opacity: 0;
   /* transform: translateY(-10px); */
 }
+
+/* User Snippets List */
+.user-snippets-move,
+.user-snippets-list-enter-active {
+  transition: all 5s ease;
+}
+.user-snippets-list-leave-active {
+  transition: all 0s ease;
+  position: absolute;
+}
+.user-snippets-list-enter-from,
+.user-snippets-list-leave-to {
+  opacity: 0;
+  transform: translateY(-200px);
+}

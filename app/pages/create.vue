@@ -51,7 +51,7 @@ const getSnippetCode = (editor: Ace.Editor) => {
       ":" +
       markerGroups.value.filter((group) =>
         group.markers.some(
-          (markerFromGroup) => markerFromGroup.id == markers.value[i].id
+          (markerFromGroup) => markerFromGroup.id === markers.value[i].id
         )
       )[0].name
     }}${code.value.slice(endIndex)}`;
@@ -67,7 +67,6 @@ const onFinished = async () => {
   try {
     if (!editor.value) {
       openDialog(DialogType.Error, "Internal error: Editor not initialized");
-      console.log("Editor not initialized", editor.value);
       return;
     }
     const snippetCode = getSnippetCode(editor.value._editor);
@@ -89,15 +88,6 @@ const onFinished = async () => {
       );
       return;
     }
-
-    console.log("Creating snippet", {
-      creator: sessionData.value.user.name,
-      title: snippetTitle.value,
-      description: snippetDescription.value,
-      code: snippetCode,
-      tags: snippetTags.value,
-      framework: snippetFramework.value,
-    } as POSTSnippet);
 
     const { data } = await useFetch("/api/snippets", {
       method: "POST",
@@ -128,6 +118,7 @@ const onFinished = async () => {
       openDialog(DialogType.Error, "Snippet creation failed");
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e);
     openDialog(DialogType.Error, "Snippet creation failed");
   }
@@ -135,11 +126,13 @@ const onFinished = async () => {
 </script>
 
 <template>
-  <lazy-selection-menu />
-  <nuxt-layout name="create" @finished="onFinished">
-    <lazy-code-editor
-      v-model="codeEditorValue"
-      :read-only="mode == CreationMode.select"
-    />
-  </nuxt-layout>
+  <div>
+    <lazy-selection-menu />
+    <nuxt-layout name="create" @finished="onFinished">
+      <lazy-code-editor
+        v-model="codeEditorValue"
+        :read-only="mode == CreationMode.select"
+      />
+    </nuxt-layout>
+  </div>
 </template>

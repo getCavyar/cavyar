@@ -46,11 +46,9 @@ export const useDialogStore = defineStore("dialogStore", () => {
               closeDialog();
             },
     }));
-    console.log(dialogActions.value); // log the dialogActions array to the console
   };
 
   const closeDialog = () => {
-    console.log("close");
     showDialog.value = false;
   };
 

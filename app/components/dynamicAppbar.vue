@@ -21,7 +21,12 @@ const showLogo = computed(() => {
     v-if="showAppbar"
     class="w-[calc(100vw-1.5rem)] mx-3 my-3 fixed top-0 left-0 flex flex-row justify-between items-center z-40"
   >
-    <nuxt-link to="/" :prefetch="true" class="ml-5" v-if="showLogo">
+    <nuxt-link
+      v-if="showLogo"
+      to="/"
+      :prefetch="true"
+      class="ml-5 absolute top-4"
+    >
       <img src="@/assets/images/logo.png" alt="" class="h-[18px]" />
     </nuxt-link>
 

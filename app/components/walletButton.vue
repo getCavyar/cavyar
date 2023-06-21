@@ -19,18 +19,18 @@ const openWalletDialog = () => {
   <transition name="fade">
     <div
       v-if="showConnectedPopup"
-      @click="showConnectedPopup = false"
       class="w-screen h-screen absolute -right-6 -top-2 bg-black/50 backdrop-blur-xl"
+      @click="showConnectedPopup = false"
     />
   </transition>
   <button
-    @click="openWalletDialog"
     :class="[
       'wallet-button',
       showConnectedPopup
         ? 'pointer-events-none h-[205px] border-transition'
         : 'h-12 border-transition-reverse',
     ]"
+    @click="openWalletDialog"
   >
     <!-- Always Visible when connected -->
     <div
@@ -79,17 +79,17 @@ const openWalletDialog = () => {
           <p>Profile</p>
         </nuxt-link>
         <button
-          @click="() => (showConnectWalletDialog = true)"
           :disabled="!connected || disconnecting"
           class="w-full h-10 pl-3 my-2.5 relative flex flex-row space-x-3 items-center justify-start rounded-lg bg-gray-500/5"
+          @click="() => (showConnectWalletDialog = true)"
         >
           <icon name="ion:wallet-outline" size="1.3em" class="text-primary" />
           <p>Change Wallet</p>
         </button>
         <button
-          @click="disconnect"
           :disabled="!connected || disconnecting"
           class="w-full h-10 pl-3 relative flex flex-row space-x-3 items-center justify-start rounded-lg bg-gray-500/5"
+          @click="disconnect"
         >
           <icon
             name="fluent:plug-disconnected-24-regular"

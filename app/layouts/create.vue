@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { v4 as idv4 } from "uuid";
+import { format } from "prettier";
+import parserTypeScript from "prettier/parser-typescript";
+import * as rustPlugin from "prettier-plugin-rust";
+import { DialogType, useDialogStore } from "~~/stores/dialogStore";
 import {
   CreationMode,
   useSnippetCreationStore,
 } from "~~/stores/snippetCreationStore";
-import { v4 as idv4 } from "uuid";
-import { DialogType, useDialogStore } from "~~/stores/dialogStore";
-import prettier from "prettier";
-import parserTypeScript from "prettier/parser-typescript";
-import * as rustPlugin from "prettier-plugin-rust";
 
 const emit = defineEmits(["finished"]);
 
@@ -27,10 +27,10 @@ const {
   selectedSnippetFrameworkLanguage,
 } = storeToRefs(snippetCreationStore);
 
-const formatCode = async () => {
+const formatCode = () => {
   try {
     if (selectedSnippetFrameworkLanguage.value === "typescript") {
-      codeEditorValue.value = prettier.format(codeEditorValue.value, {
+      codeEditorValue.value = format(codeEditorValue.value, {
         parser: "typescript",
         plugins: [parserTypeScript],
         tabWidth: 4,
@@ -52,14 +52,14 @@ const formatCode = async () => {
       return;
     }
     if (selectedSnippetFrameworkLanguage.value === "rust") {
-      codeEditorValue.value = prettier.format(codeEditorValue.value, {
+      codeEditorValue.value = format(codeEditorValue.value, {
         parser: "jinx-rust",
         plugins: [rustPlugin],
         tabWidth: 4,
       });
-      return;
     }
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.log("Prettier Error", e);
     openDialog(DialogType.Error, `${e}`, [
       {
@@ -74,7 +74,7 @@ const createMarkerGroup = () => {
   // Check if last marker group was used
   if (
     markerGroups.value.length > 0 &&
-    markerGroups.value[markerGroups.value.length - 1].markers.length == 0
+    markerGroups.value[markerGroups.value.length - 1].markers.length === 0
   ) {
     openDialog(
       DialogType.Error,
@@ -93,7 +93,7 @@ const createMarkerGroup = () => {
   const markerGroupColor = snippetCreationStore.getRandomColor();
 
   markerGroups.value.push({
-    id: id,
+    id,
     color: markerGroupColor,
     name: "",
     markers: [],
@@ -127,12 +127,12 @@ const animatePrevious = () => {
 };
 
 const onNext = () => {
-  if (mode.value == CreationMode.edit) {
-    if (markerGroups.value.length == 0) {
+  if (mode.value === CreationMode.edit) {
+    if (markerGroups.value.length === 0) {
       createMarkerGroup();
     }
   }
-  if (mode.value == CreationMode.details) {
+  if (mode.value === CreationMode.details) {
     emit("finished");
     return;
   }
@@ -141,8 +141,8 @@ const onNext = () => {
 };
 
 const onPrevious = () => {
-  if (mode.value == CreationMode.edit) return;
-  if (mode.value == CreationMode.select && markerGroups.value.length > 0) {
+  if (mode.value === CreationMode.edit) return;
+  if (mode.value === CreationMode.select && markerGroups.value.length > 0) {
     openDialog(
       DialogType.Warning,
       "If you go back, you will lose all your markers. Are you sure you want to go back?",
@@ -173,7 +173,7 @@ const nextButtonDisabled = computed(() => {
 });
 
 const previousButtonDisabled = computed(() => {
-  if (mode.value == 1) return true;
+  if (mode.value === 1) return true;
   return false;
 });
 </script>
@@ -245,9 +245,9 @@ const previousButtonDisabled = computed(() => {
                 <div class="space-y-3 text-white/60 font-medium">
                   <p>Snippet Title</p>
                   <input
+                    v-model="snippetTitle"
                     class="details-input"
                     placeholder="Send Transaction..."
-                    v-model="snippetTitle"
                   />
                 </div>
 
@@ -255,10 +255,10 @@ const previousButtonDisabled = computed(() => {
                   <p>Snippet Description</p>
 
                   <textarea
+                    v-model="snippetDescription"
                     class="details-input min-h-[42px] max-h-32"
                     type="text"
                     placeholder="You can simply substract the lamports you want to transfer from the sender's balance and add it to the receiver's balance..."
-                    v-model="snippetDescription"
                   />
                 </div>
 
@@ -271,18 +271,18 @@ const previousButtonDisabled = computed(() => {
                   <p>Keywords that describe your snippet</p>
                   <div class="flex flex-wrap items-center justify-start">
                     <form
-                      @submit="snippetCreationStore.addTag(tagInput)"
                       class="flex flex-row items-center justify-start space-x-2 mr-4 mb-2"
+                      @submit="snippetCreationStore.addTag(tagInput)"
                     >
                       <input
+                        v-model="tagInput"
                         class="text-white text-sm bg-primary/10 w-40 p-2 rounded-md text-center"
                         placeholder="Add Tag..."
-                        v-model="tagInput"
                       />
                       <button
+                        class="text-white text-sm bg-primary/10 w-10 p-2 rounded-md"
                         @click="snippetCreationStore.addTag(tagInput)"
                         @click.prevent
-                        class="text-white text-sm bg-primary/10 w-10 p-2 rounded-md"
                       >
                         <icon
                           name="line-md:plus"
@@ -299,8 +299,8 @@ const previousButtonDisabled = computed(() => {
                     >
                       <p>{{ tag }}</p>
                       <button
-                        @click="snippetCreationStore.deleteTag(tag)"
                         class="pb-0.5"
+                        @click="snippetCreationStore.deleteTag(tag)"
                       >
                         <icon
                           name="line-md:close"
@@ -344,8 +344,8 @@ const previousButtonDisabled = computed(() => {
           >
             <icon name="clarity:bolt-line" size="1.35em" />
             <button
-              @click="formatCode"
               class="text-lg hover:text-primary active:text-primary/50 transition-all duration-300"
+              @click="formatCode"
             >
               Format
             </button>
@@ -377,7 +377,6 @@ const previousButtonDisabled = computed(() => {
               ]"
             >
               <button
-                @click="createMarkerGroup"
                 :disabled="false"
                 :class="[
                   'transition-all duration-300 whitespace-nowrap',
@@ -385,6 +384,19 @@ const previousButtonDisabled = computed(() => {
                     ? 'opacity-30'
                     : 'hover:text-primary active:text-primary/50',
                 ]"
+                @click="createMarkerGroup"
+              >
+                Add Marker
+              </button>
+              <button
+                :disabled="false"
+                :class="[
+                  'transition-all duration-300 whitespace-nowrap',
+                  previousButtonDisabled
+                    ? 'opacity-30'
+                    : 'hover:text-primary active:text-primary/50',
+                ]"
+                @click="createMarkerGroup"
               >
                 Add Marker
               </button>
@@ -399,8 +411,8 @@ const previousButtonDisabled = computed(() => {
             >
               <div class="flex flex-row items-center space-x-2 pl-2">
                 <button
-                  @click="selectedMarkerGroup = markerGroup.id"
-                  @focus="selectedMarkerGroup = markerGroup.id"
+                  v-for="(markerGroup, index) in markerGroups"
+                  :key="index"
                   :class="[
                     'rounded-md text-white/80 h-10 w-40 transition-all',
                     { 'scale-105': markerGroup.id === selectedMarkerGroup },
@@ -410,14 +422,14 @@ const previousButtonDisabled = computed(() => {
                     },
                   ]"
                   :style="`background: linear-gradient(130deg, ${markerGroup.color}05, ${markerGroup.color}10); border: 1.5px solid ${markerGroup.color}60`"
-                  v-for="(markerGroup, index) in markerGroups"
-                  :key="index"
+                  @click="selectedMarkerGroup = markerGroup.id"
+                  @focus="selectedMarkerGroup = markerGroup.id"
                 >
                   <input
+                    v-model="markerGroup.name"
                     class="bg-transparent text-white/80 placeholder:text-white/40 text-center w-full h-full"
                     type="text"
                     placeholder="Group Name"
-                    v-model="markerGroup.name"
                   />
                 </button>
               </div>
@@ -433,7 +445,6 @@ const previousButtonDisabled = computed(() => {
           class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-6 space-x-2"
         >
           <button
-            @click="onPrevious"
             :disabled="previousButtonDisabled"
             :class="[
               'transition-all duration-300',
@@ -441,6 +452,7 @@ const previousButtonDisabled = computed(() => {
                 ? 'opacity-30'
                 : 'hover:text-primary active:text-primary/50',
             ]"
+            @click="onPrevious"
           >
             Previous
           </button>
@@ -450,7 +462,6 @@ const previousButtonDisabled = computed(() => {
           class="bg-background flex flex-row items-center rounded-r-xl rounded-l-sm p-2 px-6 space-x-2"
         >
           <button
-            @click="onNext"
             :disabled="nextButtonDisabled"
             :class="[
               'transition-all duration-300',
@@ -458,6 +469,7 @@ const previousButtonDisabled = computed(() => {
                 ? 'opacity-30'
                 : 'hover:text-primary active:text-primary/50',
             ]"
+            @click="onNext"
           >
             Next
           </button>
@@ -477,20 +489,25 @@ const previousButtonDisabled = computed(() => {
   );
   animation: glow 3s ease-in-out infinite;
 }
+
 @keyframes glow {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
 }
+
 .gradient-text {
   @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70;
 }
+
 .gradient-border {
   background: linear-gradient(
     200deg,
@@ -501,6 +518,7 @@ const previousButtonDisabled = computed(() => {
   );
   @apply rounded-2xl;
 }
+
 .snippet-container-border {
   background: linear-gradient(
     200deg,
@@ -511,6 +529,7 @@ const previousButtonDisabled = computed(() => {
   );
   @apply p-0.5 rounded-2xl;
 }
+
 .snippet-container {
   @apply rounded-xl w-[1000px] h-[550px] backdrop-blur-2xl bg-background;
   /* background: linear-gradient(
@@ -527,16 +546,20 @@ const previousButtonDisabled = computed(() => {
   backdrop-filter: blur(20px);
   border-color: #4f00a2;
 }
+
 .selected-marker-group {
-  @apply scale-105 bg-[#7b00ff20]  border-[#7b00ff];
+  @apply scale-105 bg-[#7b00ff20] border-[#7b00ff];
   box-shadow: 0 0 10px #000000;
 }
+
 .selection-button-group button {
   @apply w-10 h-10 text-sm transition-all duration-200 rounded-lg border border-transparent;
 }
+
 .selection-button-group button:nth-child(1) {
   @apply rounded-t-[14px];
 }
+
 .selection-button-group button:last-child {
   @apply rounded-b-[14px];
 }
@@ -554,13 +577,16 @@ const previousButtonDisabled = computed(() => {
     opacity: 0;
     transform: translateX(0);
   }
+
   50% {
     filter: blur(20px);
     transform: translateX(-130%);
   }
+
   51% {
     transform: translateX(100%);
   }
+
   100% {
     opacity: 1;
     filter: blur(0px);
@@ -577,13 +603,16 @@ const previousButtonDisabled = computed(() => {
     opacity: 0;
     transform: translateX(0);
   }
+
   50% {
     filter: blur(20px);
     transform: translateX(130%);
   }
+
   51% {
     transform: translateX(-100%);
   }
+
   100% {
     opacity: 1;
     filter: blur(0px);

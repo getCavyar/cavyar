@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
       tags: body.tags,
       code: body.code,
       framework: body.framework,
-      createdAt: createdAt,
+      createdAt,
       updatedAt: null,
       likes: [],
       aiExplanation: body.aiExplanation ?? null,
@@ -37,7 +37,6 @@ export default defineEventHandler(async (event) => {
       snippets.insertedId.toString()
     );
   } catch (error) {
-    console.log(error);
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);
   }
 });
