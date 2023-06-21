@@ -1,26 +1,20 @@
 <script setup lang="ts">
-import { Snippet } from "~~/ts/types";
+import { Snippet, DiscoveryResponse } from "~~/ts/types";
 
-const { data: snippets } = await useAsyncData(
+const { data: discoveryResponse } = await useAsyncData(
   "snippets",
-  () => $fetch("/api/snippets"),
+  () =>
+    $fetch("/api/snippets", {
+      query: { discovery: true },
+    }),
   {
     transform: (value) => {
       // @ts-ignore
-      return value.data as Snippet[];
+      return value.data as DiscoveryResponse;
     },
   }
 );
 
-const trendingSnippets = computed(() => {
-  return snippets.value?.sort((a, b) => b.likes.length - a.likes.length);
-});
-
-const recentSnippets = computed(() => {
-  return snippets.value?.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
-});
 const search = reactive({
   focused: false,
   query: "",
@@ -206,20 +200,24 @@ const getSpanWithHighlightedText = (
       </div>
     </template>
 
-    <template #trending>
-      <lazy-snippet-card
-        v-for="trendingSnippet in trendingSnippets"
-        :key="trendingSnippet._id.toString()"
-        :snippet="trendingSnippet"
-      />
+    <template #popular>
+      <div
+        v-for="topSnippets in discoveryResponse?.topSnippets"
+        :key="topSnippets._id.toString()"
+        class="p-4"
+      >
+        <lazy-snippet-card :snippet="topSnippets" />
+      </div>
     </template>
 
     <template #recent>
-      <lazy-snippet-card
-        v-for="recentSnippet in recentSnippets"
+      <div
+        v-for="recentSnippet in discoveryResponse?.recentSnippets"
         :key="recentSnippet._id.toString()"
-        :snippet="recentSnippet"
-      />
+        class="p-4"
+      >
+        <lazy-snippet-card :snippet="recentSnippet" />
+      </div>
     </template>
   </nuxt-layout>
 </template>
