@@ -1,5 +1,5 @@
 import base58 from "bs58";
-import { sign } from "tweetnacl";
+import nacl from "tweetnacl";
 
 type SignMessage = {
   domain: string;
@@ -31,6 +31,7 @@ export class SigninMessage {
     const msgUint8 = new TextEncoder().encode(msg);
     const pubKeyUint8 = base58.decode(this.publicKey);
 
-    return sign.detached.verify(msgUint8, signatureUint8, pubKeyUint8);
+    // eslint-disable-next-line import/no-named-as-default-member
+    return nacl.sign.detached.verify(msgUint8, signatureUint8, pubKeyUint8);
   }
 }
