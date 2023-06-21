@@ -80,8 +80,11 @@ const handleScroll = () => {
     document.documentElement.scrollTop || document.body.scrollTop;
   const clientHeight = document.documentElement.clientHeight;
 
-  // Check if the user has scrolled to the bottom - 100px
-  if (scrollHeight - scrollTop - 100 < clientHeight) {
+  if (
+    scrollHeight - scrollTop - 200 < clientHeight &&
+    snippetsData.value?.totalSnippetsCount &&
+    userSnippets.value.length < snippetsData.value?.totalSnippetsCount
+  ) {
     next();
   }
 };
@@ -121,7 +124,10 @@ onBeforeUnmount(() => {
     <div class="h-10" />
 
     <div class="w-full flex flex-col items-center justify-center space-y-5">
-      <div v-if="userSnippets && userSnippets?.length > 0" class="w-full">
+      <div
+        v-if="userSnippets && userSnippets?.length > 0"
+        class="w-full flex flex-col items-center"
+      >
         <transition-group
           name="user-snippets-list"
           tag="div"
@@ -176,6 +182,15 @@ onBeforeUnmount(() => {
             </div>
           </nuxt-link>
         </transition-group>
+        <button
+          v-if="
+            snippetsData?.totalSnippetsCount &&
+            snippetsData?.totalSnippetsCount > userSnippets.length
+          "
+          class="w-fit flex items-center justify-center py-10 text-lg hover:text-primary"
+        >
+          Load more
+        </button>
       </div>
       <div v-else-if="!isValidPubKey">
         <p class="text-white/80 text-center">
