@@ -21,3 +21,8 @@ export type POSTSnippet = Omit<
   Snippet,
   "_id" | "createdAt" | "updatedAt" | "likes"
 >;
+
+export type DiscoveryResponse = {
+  topSnippets: Snippet[];
+  recentSnippets: Snippet[];
+};

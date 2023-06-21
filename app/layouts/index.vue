@@ -41,20 +41,25 @@ onMounted(() => {
 
     <div class="overflow-hidden">
       <div
-        class="mt-[100vh] relative min-h-screen py-20 bg-black/80 backdrop-blur-2xl z-30"
+        class="mt-[100vh] relative min-h-screen bg-black/80 backdrop-blur-2xl z-30 pt-10"
         style="box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.3)"
       >
-        <div class="space-y-3 flex flex-col">
-          <h3 class="w-fit pl-6">Trending</h3>
-          <div class="px-6 max-w-[90vw] space-x-8 flex flex-row overflow-auto">
-            <slot name="trending" />
+        <div
+          v-for="category in ['popular', 'recent']"
+          :key="category"
+          class="space-y-3 flex flex-col p-10"
+        >
+          <div class="flex flex-row items-center justify-center space-x-5">
+            <div class="w-full h-0.5 bg-white/10" />
+            <h3 class="text-center">{{ category.toUpperCase() }}</h3>
+            <div class="w-full h-0.5 bg-white/10" />
           </div>
-        </div>
-        <div class="h-20"></div>
-        <div class="space-y-3 flex flex-col">
-          <h3 class="w-fit pl-6">Recent</h3>
-          <div class="px-6 max-w-[90vw] space-x-8 flex flex-row overflow-auto">
-            <slot name="recent" />
+          <div class="flex justify-center items-center">
+            <div
+              class="max-w-7xl flex flex-row flex-wrap items-center justify-center"
+            >
+              <slot :name="category" />
+            </div>
           </div>
         </div>
       </div>
