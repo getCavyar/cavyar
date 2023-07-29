@@ -1,6 +1,8 @@
 import { acceptHMRUpdate } from "pinia";
-import { VAceEditorInstance } from "vue3-ace-editor/types";
+import { useSelectionMenuStore } from "./selectionMenuStore";
 import { SnippetFramework } from "~~/ts/types";
+import { useMonaco } from "@guolao/vue-monaco-editor";
+import { Range } from "ace-builds";
 
 export enum CreationMode {
   edit = 1,
@@ -12,9 +14,41 @@ export enum CreationMode {
 export const useSnippetCreationStore = defineStore(
   "snippetCreationStore",
   () => {
-    const editor = useState<VAceEditorInstance | null>("editor", () => null);
+    const { isOpen, left, top } = toRefs(useSelectionMenuStore());
+    const mouse = useMouse();
 
-    const codeEditorValue = useSessionStorage("code", () => "");
+    const { monacoRef, unload } = useMonaco();
+    // const language = useSessionStorage("language", () => "html");
+    // const readOnly = useSessionStorage("readOnly", () => false);
+    const snippetCode = useSessionStorage("snippetCode", () => "");
+
+    const initEditor = () => {
+      monacoRef.value?.editor
+        .getEditors()[0]
+        .onDidChangeCursorSelection((e) => {
+          if (e.selection.isEmpty()) {
+            isOpen.value = false;
+          } else {
+            isOpen.value = true;
+            left.value = mouse.x.value - 40 + "px";
+            top.value = mouse.y.value - 80 + "px";
+          }
+        });
+
+      monacoRef.value?.editor.getEditors()[0].onDidChangeModelContent(() => {
+        snippetCode.value = getEditorValue();
+      });
+    };
+
+    const getEditorValue = () => {
+      return (
+        monacoRef.value?.editor?.getEditors()[0]?.getModel()?.getValue() ?? ""
+      );
+    };
+
+    const setEditorValue = (value: string) => {
+      monacoRef.value?.editor?.getEditors()[0]?.getModel()?.setValue(value);
+    };
 
     const mode = useSessionStorage<CreationMode>(
       "mode",
@@ -27,7 +61,8 @@ export const useSnippetCreationStore = defineStore(
         color: string;
         name: string;
         markers: {
-          id: number;
+          id: string;
+          styleId: string;
           startRow: number;
           startCol: number;
           endRow: number;
@@ -71,7 +106,7 @@ export const useSnippetCreationStore = defineStore(
       markerGroups.value = [];
       // Ace won't update the markers if we don't reload the page
       // So we reload the page for now (God forgive me)
-      window.location.reload();
+      // window.location.reload();
     };
 
     const frameworks = useState<
@@ -116,6 +151,13 @@ export const useSnippetCreationStore = defineStore(
       () => "anchor"
     );
 
+    watch(snippetFramework, (newVal) => {
+      monacoRef.value?.editor!.setModelLanguage(
+        monacoRef.value?.editor!.getEditors()[0].getModel()!,
+        selectedSnippetFrameworkLanguage.value!
+      );
+    });
+
     const snippetTags = useSessionStorage<string[]>("snippetTags", () => []);
 
     const tagInput = useSessionStorage("tagInput", () => "");
@@ -135,9 +177,64 @@ export const useSnippetCreationStore = defineStore(
       snippetTags.value = snippetTags.value.filter((t) => t !== tag);
     };
 
+    const getSnippetCode = (editorValue: string) => {
+      const ranges = markers.value.map((marker) => {
+        return new Range(
+          marker.startRow,
+          marker.startCol,
+          marker.endRow,
+          marker.endCol
+        );
+      });
+
+      ranges.sort((a, b) => {
+        if (a === undefined || b === undefined) return 0;
+        if (a?.start.row === b?.start.row) {
+          return a.start.column - b.start.column;
+        }
+        return a.start.row - b.start.row;
+      });
+
+      const code = useState(() => editorValue);
+      for (let i = ranges.length - 1; i >= 0; i--) {
+        if (!ranges[i]) continue;
+        const {
+          start: { column: startColumn, row: startRow },
+        } = ranges[i]!;
+
+        const startIndex = monacoRef
+          .value!.editor.getEditors()[0]
+          .getModel()!
+          .getOffsetAt({
+            lineNumber: startRow,
+            column: startColumn,
+          });
+        const endIndex = monacoRef
+          .value!.editor.getEditors()[0]
+          .getModel()!
+          .getOffsetAt({
+            lineNumber: ranges[i]!.end.row,
+            column: ranges[i]!.end.column,
+          });
+
+        const markerGroup = markerGroups.value.filter((group) =>
+          group.markers.some(
+            (markerFromGroup) => markerFromGroup.id === markers.value[i].id
+          )
+        )[0];
+
+        const groupName = markerGroup ? markerGroup.name : "default";
+
+        code.value = `${code.value.slice(0, startIndex)}\${${
+          i + 1 + ":" + groupName
+        }}${code.value.slice(endIndex)}`;
+      }
+      return code.value;
+    };
+
     return {
-      editor,
-      codeEditorValue,
+      monacoRef,
+      snippetCode,
       mode,
       markerGroups,
       markers,
@@ -150,12 +247,17 @@ export const useSnippetCreationStore = defineStore(
       tagInput,
       selectedSnippetFrameworkLanguage,
 
+      initEditor,
+      getEditorValue,
+      setEditorValue,
+      unload,
       getRandomColor,
       createMarkerGroupClass,
       selectMarkerGroup,
       deleteAllMarkers,
       addTag,
       deleteTag,
+      getSnippetCode,
     };
   }
 );

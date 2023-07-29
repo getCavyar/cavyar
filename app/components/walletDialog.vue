@@ -6,6 +6,7 @@ import base58 from "bs58";
 import { useConnectWalletStore } from "~~/stores/connectWalletStore";
 import { SigninMessage } from "@/server/utils/signin_message";
 import { DialogType, useDialogStore } from "~/stores/dialogStore";
+import { shortenPublicKey } from "~/ts/utils";
 
 const { openDialog } = useDialogStore();
 
@@ -21,19 +22,15 @@ const { status, signIn, signOut, getCsrfToken, data: authData } = useAuth();
 
 const handleSignIn = async () => {
   try {
-    // if (!wallet.connected.value) {
-    //   showConnectWalletDialog.value = true;
-    // }
-
     const csrf = await getCsrfToken();
     if (!wallet.publicKey.value || !csrf || !wallet.signMessage.value) return;
 
     const message = new SigninMessage({
       domain: window.location.host,
       publicKey: wallet.publicKey.value.toString(),
-      statement: `Sign this message to authenticate as ${wallet.publicKey.value
-        .toString()
-        .slice(0, 5)}...\n\n`,
+      statement: `Sign this message to authenticate as ${shortenPublicKey(
+        wallet.publicKey.value.toString()
+      )} \n\n`,
       nonce: csrf,
     });
 
@@ -94,7 +91,6 @@ watch(
       handleSignIn();
     }
     if (!connected && status.value === "authenticated") {
-      console.log(authData.value);
       signOut();
     }
   }
@@ -143,9 +139,9 @@ watch(
               </p>
             </button>
           </div>
-          <button class="close-button" @click="closeDialog">
+          <!-- <button class="close-button" @click="closeDialog">
             <icon name="uim:arrow-circle-down" size="2.8em" />
-          </button>
+          </button> -->
         </div>
       </div>
     </transition>

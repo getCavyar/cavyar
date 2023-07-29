@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
 
     await isAuthenticated(event);
 
-    const createdAt = new Date().getTime();
+    const createdAt = Date.now();
     const snippets = await snippetsRef.insertOne({
       _id: ObjectId.createFromTime(createdAt / 1000),
       title: body.title,
@@ -28,6 +28,7 @@ export default defineEventHandler(async (event) => {
       createdAt,
       updatedAt: null,
       likes: [],
+      dislikes: [],
       aiExplanation: body.aiExplanation ?? null,
     });
 

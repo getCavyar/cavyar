@@ -9,7 +9,7 @@ import { ChatOpenAI } from "langchain/chat_models/openai";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { AIChatMessage, HumanChatMessage } from "langchain/schema";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
-import { PromptTemplate } from "langchain";
+import { PromptTemplate } from "langchain/prompts";
 import { OpenAIChat } from "langchain/llms/openai";
 
 // export const runtime = 'edge'
@@ -68,6 +68,7 @@ export default defineEventHandler(async (event: any) => {
     throw new Error("OPENAI_API_KEY is not set in the environment");
   } else {
     const vectorstore = await HNSWLib.fromDocuments([], new OpenAIEmbeddings());
+
     const chain = makeChain(vectorstore, (token: string) => {
       socket.send(
         JSON.stringify({

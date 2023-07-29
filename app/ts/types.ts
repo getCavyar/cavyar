@@ -8,6 +8,7 @@ export type Snippet = {
   creator: Id;
   title: string;
   likes: Id[];
+  dislikes: Id[];
   description: string;
   code: string;
   tags: string[];
@@ -15,6 +16,16 @@ export type Snippet = {
   createdAt: number;
   updatedAt: number | null;
   aiExplanation: string | null;
+};
+
+export type User = {
+  _id: ObjectId;
+  username: string | null;
+  publicKey: string;
+  avatarUrl: string;
+  favorites: Id[];
+  githubAccessToken: string | null;
+  createdAt: number;
 };
 
 export type POSTSnippet = Omit<

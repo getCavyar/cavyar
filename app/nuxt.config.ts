@@ -12,6 +12,7 @@ export default defineNuxtConfig({
   //   enabled: true,
   //   message: "test",
   // },
+  // },
   // rateLimiter: {
   //   tokensPerInterval: 100,
   //   interval: "minute",
@@ -24,11 +25,13 @@ export default defineNuxtConfig({
   //   methods: "*", // All methods are allowed
   // },
   // },
+  devtools: true,
   experimental: {
     renderJsonPayloads: false,
   },
   routeRules: {
-    "/create": { ssr: false },
+    "/create": { ssr: true },
+    "/snippets/:id": { ssr: false },
   },
   modules: [
     "@sidebase/nuxt-auth",
@@ -37,6 +40,9 @@ export default defineNuxtConfig({
     "@pinia/nuxt",
     "@nuxtjs/tailwindcss",
     "nuxt-icon",
+    "nuxt-monaco-editor",
+    "@nuxtjs/fontaine",
+    "floating-vue/nuxt",
     // "nuxt-security",
   ],
   css: ["@/assets/css/main.pcss"],
@@ -46,13 +52,25 @@ export default defineNuxtConfig({
       mode: "out-in",
     },
   },
+  monacoEditor: {
+    // These are default values:
+    // dest: "_monaco",
+    locale: "en",
+    componentName: {
+      codeEditor: "MonacoEditor",
+      diffEditor: "MonacoDiffEditor",
+    },
+  },
 
   runtimeConfig: {
     // Secret Variables: only available on the server
     mongoPW: process.env.MONGO_PW,
     authSecret: process.env.AUTH_SECRET,
+    githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
+    encryptionKey: process.env.ENCRYPTION_KEY,
     // Public Variables
     public: {
+      githubClientId: process.env.GITHUB_CLIENT_ID,
       auth: {
         computed: {
           origin: process.env.AUTH_ORIGIN,

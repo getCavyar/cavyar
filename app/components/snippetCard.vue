@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getAvatar } from "~/ts/utils";
+import { getAvatar, shortenPublicKey } from "~/ts/utils";
 import { Snippet } from "~~/ts/types";
 // import { generateAvatar } from "~~/ts/utils";
 
@@ -33,7 +33,7 @@ defineProps<{
           alt=""
         />
         <p class="text-sm text-white/80">
-          {{ snippet.creator.slice(0, 4) + "..." + snippet.creator.slice(-4) }}
+          {{ shortenPublicKey(snippet.creator) }}
         </p>
       </div>
       <div

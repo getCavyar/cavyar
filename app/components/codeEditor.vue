@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { Range } from "ace-builds";
 import { VAceEditor } from "vue3-ace-editor";
@@ -37,9 +37,16 @@ const { markerGroups, mode, editor, selectedSnippetFrameworkLanguage } =
   storeToRefs(useSnippetCreationStore());
 
 const editorInit = (initEditor: VAceEditorInstance) => {
+  // if already initialized return
+  if (editor.value) return;
+
+  // if not initialized, initialize
   editor.value = initEditor;
 
-  if (!editor.value) return;
+  if (!editor.value) {
+    alert("EDITOR NOT INITIALIZED");
+    return;
+  }
   // editor.value._editor.setHighlightActiveLine(false);
   // editor.value._editor.on("change", () => {
   //   TODO update marker positions on change
@@ -70,8 +77,6 @@ const editorInit = (initEditor: VAceEditorInstance) => {
   });
 };
 
-onMounted(() => editorInit(editor.value!));
-
 const cursorColor = computed(() => {
   if (mode.value !== CreationMode.edit) return "transparent";
   return "#00ffaa";
@@ -96,12 +101,22 @@ const handleClick = (event: MouseEvent) => {
     isOpen.value = false;
   }
 };
+
+const aceRef = ref();
+
+onMounted(() => {
+  editorInit(aceRef.value);
+});
+
+const editorInit2 = (x: any) => {
+  console.log("X: ", x);
+};
 </script>
 
 <template>
-  <!-- @init="editorInit" -->
+  {{ aceRef }}
   <VAceEditor
-    ref="editor"
+    ref="aceRef"
     v-model:value="value"
     :lang="selectedSnippetFrameworkLanguage"
     :readonly="readOnly"
@@ -114,6 +129,7 @@ const handleClick = (event: MouseEvent) => {
       background-color: transparent;
       color: rgba(255, 255, 255, 0.85);
     "
+    @init="editorInit2"
     @click="handleClick"
   />
 </template>
@@ -131,4 +147,4 @@ const handleClick = (event: MouseEvent) => {
 .ace_gutter-active-line {
   background-color: v-bind(activeLineColor) !important;
 }
-</style>
+</style> -->

@@ -2,7 +2,7 @@
 import { storeToRefs } from "pinia";
 import { v4 as idv4 } from "uuid";
 import { format } from "prettier";
-import parserTypeScript from "prettier/parser-typescript";
+import * as parserTypeScript from "prettier/parser-typescript";
 import * as rustPlugin from "prettier-plugin-rust";
 import { DialogType, useDialogStore } from "~~/stores/dialogStore";
 import {
@@ -16,7 +16,7 @@ const { openDialog } = useDialogStore();
 
 const snippetCreationStore = useSnippetCreationStore();
 const {
-  codeEditorValue,
+  snippetCode,
   mode,
   selectedMarkerGroup,
   markerGroups,
@@ -27,14 +27,16 @@ const {
   selectedSnippetFrameworkLanguage,
 } = storeToRefs(snippetCreationStore);
 
-const formatCode = () => {
+const formatCode = async () => {
   try {
     if (selectedSnippetFrameworkLanguage.value === "typescript") {
-      codeEditorValue.value = format(codeEditorValue.value, {
-        parser: "typescript",
-        plugins: [parserTypeScript],
-        tabWidth: 4,
-      });
+      snippetCreationStore.setEditorValue(
+        await format(snippetCode.value, {
+          parser: "typescript",
+          // plugins: [parserTypeScript.parsers.typescript],
+          tabWidth: 4,
+        })
+      );
       return;
     }
     if (selectedSnippetFrameworkLanguage.value === "python") {
@@ -52,11 +54,13 @@ const formatCode = () => {
       return;
     }
     if (selectedSnippetFrameworkLanguage.value === "rust") {
-      codeEditorValue.value = format(codeEditorValue.value, {
-        parser: "jinx-rust",
-        plugins: [rustPlugin],
-        tabWidth: 4,
-      });
+      snippetCreationStore.setEditorValue(
+        await format(snippetCode.value, {
+          parser: "jinx-rust",
+          plugins: [rustPlugin],
+          tabWidth: 4,
+        })
+      );
     }
   } catch (e) {
     // eslint-disable-next-line no-console
@@ -169,12 +173,31 @@ const onPrevious = () => {
 };
 
 const nextButtonDisabled = computed(() => {
-  if (codeEditorValue.value.length <= 3) return true;
+  if (snippetCode.value.length <= 3) return true;
 });
 
 const previousButtonDisabled = computed(() => {
   if (mode.value === 1) return true;
   return false;
+});
+
+const previewVisible = useState("previewVisible", () => false);
+const previewCode = useState("previewCode", () => "");
+
+const togglePreview = () => {
+  previewVisible.value = !previewVisible.value;
+};
+
+const prettyCode = computed(() => {
+  // if (monacoEditorCode.value) return;
+  // const matches = monacoEditorCode.value.matchAll(regex);
+  // for (const match of matches) {
+  //   previewCode.value = monacoEditorCode.value?.replace(match[0], match[1]);
+  // }
+
+  // previewCode.value = snippetCreationStore.getSnippetCode();
+  previewCode.value = "";
+  return previewCode;
 });
 </script>
 
@@ -226,7 +249,12 @@ const previousButtonDisabled = computed(() => {
       >
         <div class="snippet-container p-4">
           <div class="w-full h-full relative">
-            <slot />
+            <div v-if="previewVisible">
+              <Prism :language="selectedSnippetFrameworkLanguage">
+                {{ prettyCode }}
+              </Prism>
+            </div>
+            <slot v-else />
           </div>
         </div>
       </div>
@@ -330,13 +358,17 @@ const previousButtonDisabled = computed(() => {
             class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-4 space-x-2"
           >
             <icon name="clarity:code-line" size="2em" />
-            <p class="text-lg min-w-[30px]">{{ codeEditorValue.length }}</p>
+            <p class="text-lg min-w-[30px]">
+              {{ snippetCode.length }}
+            </p>
           </div>
           <div
             class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
           >
             <icon name="system-uicons:paragraph-left" size="2em" />
-            <p class="text-lg">{{ codeEditorValue.split("\n").length }}</p>
+            <p class="text-lg">
+              {{ snippetCode.split("\n").length }}
+            </p>
           </div>
 
           <div
@@ -378,24 +410,21 @@ const previousButtonDisabled = computed(() => {
             >
               <button
                 :disabled="false"
-                :class="[
-                  'transition-all duration-300 whitespace-nowrap',
-                  previousButtonDisabled
-                    ? 'opacity-30'
-                    : 'hover:text-primary active:text-primary/50',
-                ]"
-                @click="createMarkerGroup"
+                class="transition-all duration-300 whitespace-nowrap text-white/70 hover:text-primary active:text-primary/50"
+                @click="togglePreview"
               >
-                Add Marker
+                <icon name="ph:eye" size="25px" />
               </button>
+            </div>
+            <div
+              :class="[
+                'h-[55px] w-fit  bg-background flex flex-row items-center rounded-l-sm p-2 px-6 space-x-2',
+                markerGroups.length > 0 ? 'rounded-r-sm' : 'rounded-r-xl',
+              ]"
+            >
               <button
                 :disabled="false"
-                :class="[
-                  'transition-all duration-300 whitespace-nowrap',
-                  previousButtonDisabled
-                    ? 'opacity-30'
-                    : 'hover:text-primary active:text-primary/50',
-                ]"
+                class="transition-all duration-300 whitespace-nowrap hover:text-primary active:text-primary/50"
                 @click="createMarkerGroup"
               >
                 Add Marker

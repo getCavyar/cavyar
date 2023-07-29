@@ -1,0 +1,21 @@
+lockfileVersion: 5.4
+
+specifiers:
+  '@dqbd/tiktoken': ^1.0.7
+  '@types/node': ^20.2.1
+
+dependencies:
+  '@dqbd/tiktoken': 1.0.7
+
+devDependencies:
+  '@types/node': 20.2.1
+
+packages:
+
+  /@dqbd/tiktoken/1.0.7:
+    resolution: {integrity: sha512-bhR5k5W+8GLzysjk8zTMVygQZsgvf7W1F0IlL4ZQ5ugjo5rCyiwGM5d8DYriXspytfu98tv59niang3/T+FoDw==}
+    dev: false
+
+  /@types/node/20.2.1:
+    resolution: {integrity: sha512-DqJociPbZP1lbZ5SQPk4oag6W7AyaGMO6gSfRwq3PWl4PXTwJpRQJhDq4W0kzrg3w6tJ1SwlvGZ5uKFHY13LIg==}
+    dev: true

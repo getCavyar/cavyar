@@ -1,7 +1,9 @@
+import { ObjectId } from "mongodb";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NuxtAuthHandler } from "#auth";
-import { SigninMessage } from "~/server/utils/signin_message";
 import { getAvatar } from "~/ts/utils";
+import { SigninMessage } from "~/server/utils/signin_message";
+import { usersRef } from "~/server/plugins/mongodb";
 
 const config = useRuntimeConfig();
 
@@ -44,12 +46,27 @@ export default NuxtAuthHandler({
             return null;
           }
 
-          const validationResult = await signinMessage.validate(
+          const validationResult = signinMessage.validate(
             credentials?.signature || ""
           );
 
           if (!validationResult)
             throw new Error("Could not validate the signed message");
+
+          if (
+            (await usersRef.findOne({ publicKey: signinMessage.publicKey })) ===
+            null
+          ) {
+            const createdAt = Date.now();
+            await usersRef.insertOne({
+              _id: ObjectId.createFromTime(createdAt / 1000),
+              username: null,
+              publicKey: signinMessage.publicKey,
+              avatarUrl: getAvatar(signinMessage.publicKey),
+              favorites: [],
+              createdAt,
+            });
+          }
 
           return {
             id: signinMessage.publicKey,
@@ -62,8 +79,6 @@ export default NuxtAuthHandler({
   ],
   callbacks: {
     session({ session, token }) {
-      // @ts-ignore
-      session.publicKey = token.sub;
       if (session.user) {
         session.user.name = token.sub;
         session.user.image = getAvatar(token.sub!);
