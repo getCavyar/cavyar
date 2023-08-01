@@ -1,10 +1,19 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { frameworks, getFrameworkIcon } from "../../utils";
+  import { createEventDispatcher } from "svelte";
 
   let searchQuery = "";
   let selectedFramework = "anchor";
   let showFrameworkPicker = false;
+
+  // export a function to query the snippets
+
+  const dispatch = createEventDispatcher();
+
+  function querySnippets(searchQuery: string) {
+    dispatch("query", searchQuery);
+  }
 </script>
 
 <!-- Framework Selector Backdrop -->
@@ -27,6 +36,7 @@
     style="margin-right:10px"
     placeholder="Search Snippets..."
     bind:value={searchQuery}
+    on:change={() => querySnippets(searchQuery)}
   />
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div

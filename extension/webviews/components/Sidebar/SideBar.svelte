@@ -16,10 +16,20 @@
     pinnedSnippets = [...pinnedSnippets, snippet];
   };
 
-  const fetchSnippets = async () => {
-    const response = await fetch("http://localhost:3000/api/snippets");
-    const data = await response.json();
-    return data.snippets;
+  const fetchSnippets = async (query?: string) => {
+    if (query) {
+      const response = await fetch(
+        `http://localhost:3000/api/snippets?query=${query}`
+      );
+      const { data } = await response.json();
+      console.log("DATA", data);
+      return data;
+    } else {
+      const response = await fetch("http://localhost:3000/api/snippets");
+      const { data } = await response.json();
+      console.log("DATA", data);
+      return data;
+    }
   };
 
   onMount(async () => {
@@ -45,7 +55,13 @@
       />
 
       {#if $selectedTab == "Search"}
-        <SearchHeader />
+        <SearchHeader
+          on:query={async (query) => {
+            snippets = await fetchSnippets(
+              query.detail ? query.detail : undefined
+            );
+          }}
+        />
       {/if}
     </div>
 
