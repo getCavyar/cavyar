@@ -5,3 +5,9 @@ export const getAvatar = (seed: string): string => {
 export const shortenPublicKey = (publicKey: string): string => {
   return `${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`;
 };
+
+export const signInWithGithub = (githubClientId: string) => {
+  const redirectUri = `${process.env.BASE_URL}/api/github/callback`;
+  const authUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}`;
+  window.location.href = authUrl;
+};

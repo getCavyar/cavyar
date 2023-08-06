@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 export type SnippetFramework = "anchor" | "native" | "seahorse" | "typescript";
 export type Id = string;
 
+// TODO include creator avatar in http request
 export type Snippet = {
   _id: ObjectId;
   creator: Id;
@@ -23,14 +24,13 @@ export type User = {
   username: string | null;
   publicKey: string;
   avatarUrl: string;
-  favorites: Id[];
-  githubAccessToken: string | null;
+  bookmarks: Id[];
   createdAt: number;
 };
 
 export type POSTSnippet = Omit<
   Snippet,
-  "_id" | "createdAt" | "updatedAt" | "likes"
+  "_id" | "createdAt" | "updatedAt" | "likes" | "aiExplanation"
 >;
 
 export type DiscoveryResponse = {

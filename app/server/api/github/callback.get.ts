@@ -1,9 +1,5 @@
+import { getAccessToken, getUserProfile } from "../../utils/github";
 import { usersRef } from "~/server/plugins/mongodb";
-import {
-  getAccessToken,
-  getUserProfile,
-  saveEncryptedAccessToken,
-} from "../../utils/github";
 
 export default defineEventHandler(async (event) => {
   const { code } = getQuery(event) as {
@@ -20,14 +16,10 @@ export default defineEventHandler(async (event) => {
   // Fetch user's profile information
   const userProfile = await getUserProfile(accessToken);
 
+  // Get User's auth session
   const session = await isAuthenticated(event);
 
   if (session.user?.name) {
-    const userId = session.user.name;
-
-    // Save the encrypted access token in the database
-    await saveEncryptedAccessToken(userId, accessToken);
-
     usersRef.updateOne(
       { publicKey: session.user.name },
       {
@@ -35,11 +27,11 @@ export default defineEventHandler(async (event) => {
           username: userProfile.username,
           avatarUrl: userProfile.avatarUrl,
         },
-      }
+      },
     );
   } else {
     return ErrorResponse.unauthorized();
   }
 
-  return sendRedirect(event, "/");
+  return sendRedirect(event, `/users/${session.user.name}`);
 });

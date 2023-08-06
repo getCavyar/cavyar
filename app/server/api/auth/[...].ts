@@ -32,7 +32,7 @@ export default NuxtAuthHandler({
       async authorize(credentials: any, req: any) {
         try {
           const signinMessage = new SigninMessage(
-            JSON.parse(credentials?.message || "{}")
+            JSON.parse(credentials?.message || "{}"),
           );
           const nextAuthUrl = new URL(config.public.nextauthUrl);
 
@@ -47,7 +47,7 @@ export default NuxtAuthHandler({
           }
 
           const validationResult = signinMessage.validate(
-            credentials?.signature || ""
+            credentials?.signature || "",
           );
 
           if (!validationResult)
@@ -63,7 +63,7 @@ export default NuxtAuthHandler({
               username: null,
               publicKey: signinMessage.publicKey,
               avatarUrl: getAvatar(signinMessage.publicKey),
-              favorites: [],
+              bookmarks: [],
               createdAt,
             });
           }

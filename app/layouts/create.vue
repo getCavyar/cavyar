@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { v4 as idv4 } from "uuid";
-import { format } from "prettier";
-import * as parserTypeScript from "prettier/parser-typescript";
-import * as rustPlugin from "prettier-plugin-rust";
+// import { format } from "prettier";
+// import parserTypeScript from "prettier/parser-typescript";
+// import * as rustPlugin from "prettier-plugin-rust";
 import { DialogType, useDialogStore } from "~~/stores/dialogStore";
 import {
   CreationMode,
@@ -24,18 +24,18 @@ const {
   snippetDescription,
   snippetTags,
   tagInput,
-  selectedSnippetFrameworkLanguage,
+  // selectedSnippetFrameworkLanguage,
 } = storeToRefs(snippetCreationStore);
 
-const formatCode = async () => {
+/* const formatCode = async () => {
   try {
     if (selectedSnippetFrameworkLanguage.value === "typescript") {
       snippetCreationStore.setEditorValue(
         await format(snippetCode.value, {
           parser: "typescript",
-          // plugins: [parserTypeScript.parsers.typescript],
+          plugins: [],
           tabWidth: 4,
-        })
+        }),
       );
       return;
     }
@@ -49,7 +49,7 @@ const formatCode = async () => {
             label: "Ok",
             callback() {},
           },
-        ]
+        ],
       );
       return;
     }
@@ -59,7 +59,7 @@ const formatCode = async () => {
           parser: "jinx-rust",
           plugins: [rustPlugin],
           tabWidth: 4,
-        })
+        }),
       );
     }
   } catch (e) {
@@ -72,7 +72,7 @@ const formatCode = async () => {
       },
     ]);
   }
-};
+}; */
 
 const createMarkerGroup = () => {
   // Check if last marker group was used
@@ -88,7 +88,7 @@ const createMarkerGroup = () => {
           callback() {},
           label: "Ok",
         },
-      ]
+      ],
     );
     return;
   }
@@ -132,210 +132,289 @@ const animatePrevious = () => {
 
 const onNext = () => {
   if (mode.value === CreationMode.edit) {
-    if (markerGroups.value.length === 0) {
-      createMarkerGroup();
-    }
+    // if (markerGroups.value.length === 0) {
+    //   createMarkerGroup();
+    // }
+    animateNext();
+    mode.value += 2;
+    return;
   }
   if (mode.value === CreationMode.details) {
     emit("finished");
-    return;
   }
-  animateNext();
-  mode.value++;
 };
 
 const onPrevious = () => {
   if (mode.value === CreationMode.edit) return;
-  if (mode.value === CreationMode.select && markerGroups.value.length > 0) {
-    openDialog(
-      DialogType.Warning,
-      "If you go back, you will lose all your markers. Are you sure you want to go back?",
-      [
-        {
-          callback() {},
-          label: "Cancel",
-        },
-        {
-          callback() {
-            snippetCreationStore.deleteAllMarkers();
 
-            animatePrevious();
-            mode.value--;
-          },
-          label: "Yes",
-        },
-      ]
-    );
-    return;
+  if (mode.value === CreationMode.details) {
+    mode.value -= 2;
+    animatePrevious();
   }
-  animatePrevious();
-  mode.value--;
 };
 
 const nextButtonDisabled = computed(() => {
-  if (snippetCode.value.length <= 3) return true;
+  if (mode.value === CreationMode.edit) {
+    if (snippetCreationStore.validateCode) {
+      return false;
+    }
+    return true;
+  }
+  if (mode.value === CreationMode.select) {
+    if (snippetCreationStore.validateMarkerGroups) {
+      return false;
+    }
+    return true;
+  }
+  if (mode.value === CreationMode.details) {
+    if (
+      snippetCreationStore.validateTitle &&
+      snippetCreationStore.validateDescription &&
+      snippetCreationStore.validateTags
+    ) {
+      return false;
+    }
+    return true;
+  }
 });
 
+// TODO: Add validation for title and description etc.
 const previousButtonDisabled = computed(() => {
   if (mode.value === 1) return true;
   return false;
 });
 
 const previewVisible = useState("previewVisible", () => false);
-const previewCode = useState("previewCode", () => "");
 
 const togglePreview = () => {
   previewVisible.value = !previewVisible.value;
 };
 
-const prettyCode = computed(() => {
-  // if (monacoEditorCode.value) return;
-  // const matches = monacoEditorCode.value.matchAll(regex);
-  // for (const match of matches) {
-  //   previewCode.value = monacoEditorCode.value?.replace(match[0], match[1]);
-  // }
-
-  // previewCode.value = snippetCreationStore.getSnippetCode();
-  previewCode.value = "";
-  return previewCode;
-});
+// const prettyCode = computed(() => {
+//   const code = snippetCreationStore.getSnippetCode(snippetCode.value);
+//   // TODO - I think this causes the conversion to fail
+//   return code.replace(/\$\{\d+:(.*?)\}/g, (_, p1) => {
+//     return p1;
+//   });
+// });
 </script>
 
 <template>
-  <div
-    class="w-screen h-screen relative space-y-5 flex flex-col items-center justify-center"
-  >
-    <nuxt-link
-      to="/"
-      class="absolute left-6 top-6 flex flex-row items-center justify-between space-x-2 text-white/70 font-medium"
+  <div>
+    <div
+      class="w-screen h-screen relative space-y-5 hidden md:flex flex-col items-center justify-center"
     >
-      <icon name="mingcute:exit-line" size="2em" class="rotate-180" />
-      <p>Exit</p>
-    </nuxt-link>
-
-    <!-- Title/Header -->
-    <div class="flex flex-col items-center justify-center">
-      <div class="relative">
-        <div class="title-glow" />
-        <h1 class="gradient-text">
-          {{
-            mode == CreationMode.edit
-              ? "Enter Your Code"
-              : mode == CreationMode.select
-              ? "Mark Variables"
-              : "Details"
-          }}
-        </h1>
-        <div class="flex flex-row space-x-2 items-center justify-center">
-          <div
-            v-for="i in 3"
-            :key="i"
-            :class="[
-              'w-4 h-4 border rounded-full bg-primary border-primary',
-              i == mode
-                ? 'border-opacity-100 bg-opacity-100'
-                : 'border-opacity-30 bg-opacity-5',
-            ]"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Body -->
-    <div ref="codeEditorRef">
-      <div
-        v-show="mode != CreationMode.details"
-        class="snippet-container-border"
+      <nuxt-link
+        to="/"
+        class="absolute left-6 top-6 flex flex-row items-center justify-between space-x-1.5 text-white/70 font-medium pl-4 pr-6 py-2 rounded-md hover:bg-white/5 transition-all"
       >
-        <div class="snippet-container p-4">
-          <div class="w-full h-full relative">
-            <div v-if="previewVisible">
-              <Prism :language="selectedSnippetFrameworkLanguage">
-                {{ prettyCode }}
-              </Prism>
-            </div>
-            <slot v-else />
+        <icon name="mingcute:exit-line" size="1.1em" class="rotate-180" />
+        <p>Exit</p>
+      </nuxt-link>
+
+      <!-- Title/Header -->
+      <div class="flex flex-col items-center justify-center">
+        <div class="flex flex-col items-center relative">
+          <div class="title-glow" />
+          <h1 class="gradient-text">
+            {{
+              mode == CreationMode.edit
+                ? "Enter Your Code"
+                : mode == CreationMode.select
+                ? "Mark Variables"
+                : "Details"
+            }}
+          </h1>
+          <div class="flex flex-row space-x-2 items-center justify-center">
+            <div
+              v-for="i in 3"
+              :key="i"
+              :class="[
+                'w-4 h-4 border rounded-full bg-primary border-primary',
+                i == mode
+                  ? 'border-opacity-100 bg-opacity-100'
+                  : 'border-opacity-30 bg-opacity-5',
+                i == 2 ? 'hidden' : 'block',
+              ]"
+            />
           </div>
         </div>
       </div>
 
-      <div v-if="mode == CreationMode.details" class="">
-        <div class="w-full h-full relative">
-          <div class="snippet-container-border">
-            <!-- <slot name="frameworks+tags" />
+      <!-- Body -->
+      <div ref="codeEditorRef">
+        <div
+          v-show="mode != CreationMode.details"
+          class="snippet-container-border"
+        >
+          <div class="snippet-container editor-width rounded-2xl p-2">
+            <div class="w-full h-full relative">
+              <!-- <div
+                v-if="previewVisible === true"
+                class="w-full h-full absolute left-0 top-0 z-10 flex flex-col space-y-4 bg-black"
+              >
+                <p class="font-bold text-lg">Result:</p>
+                <Prism :language="selectedSnippetFrameworkLanguage">
+                  {{ snippet.code }}
+                </Prism>
+              </div> -->
+              <slot />
+            </div>
+          </div>
+        </div>
+
+        <div v-if="mode == CreationMode.details">
+          <div class="w-full h-full relative">
+            <div class="snippet-container-border">
+              <!-- <slot name="frameworks+tags" />
             <slot name="title" />
             <slot name="description" /> -->
 
-            <div
-              class="snippet-container flex flex-col items-center justify-center"
-            >
-              <div class="w-[80%] space-y-8">
-                <div class="space-y-3 text-white/60 font-medium">
-                  <p>Snippet Title</p>
-                  <input
-                    v-model="snippetTitle"
-                    class="details-input"
-                    placeholder="Send Transaction..."
-                  />
-                </div>
-
-                <div class="space-y-3 text-white/60 font-medium">
-                  <p>Snippet Description</p>
-
-                  <textarea
-                    v-model="snippetDescription"
-                    class="details-input min-h-[42px] max-h-32"
-                    type="text"
-                    placeholder="You can simply substract the lamports you want to transfer from the sender's balance and add it to the receiver's balance..."
-                  />
-                </div>
-
-                <div class="space-y-3 text-white/60 font-medium">
-                  <p>Snippet Framework / Language</p>
-                  <framework-selector />
-                </div>
-
-                <div class="space-y-3 text-white/60 font-medium">
-                  <p>Keywords that describe your snippet</p>
-                  <div class="flex flex-wrap items-center justify-start">
-                    <form
-                      class="flex flex-row items-center justify-start space-x-2 mr-4 mb-2"
-                      @submit="snippetCreationStore.addTag(tagInput)"
-                    >
-                      <input
-                        v-model="tagInput"
-                        class="text-white text-sm bg-primary/10 w-40 p-2 rounded-md text-center"
-                        placeholder="Add Tag..."
-                      />
-                      <button
-                        class="text-white text-sm bg-primary/10 w-10 p-2 rounded-md"
-                        @click="snippetCreationStore.addTag(tagInput)"
-                        @click.prevent
-                      >
-                        <icon
-                          name="line-md:plus"
-                          size="20px"
-                          class="text-white/70"
+              <div
+                class="snippet-container editor-width flex flex-row items-start justify-start space-x-8 p-10"
+              >
+                <div class="w-2/3 space-y-6">
+                  <div
+                    class="space-y-6 bg-surface border border-white/5 h-full px-5 py-2.5 rounded-2xl"
+                  >
+                    <div class="space-y-2 text-white/60 font-medium">
+                      <p>Snippet Title</p>
+                      <div class="space-y-2 flex flex-col">
+                        <input
+                          v-model="snippetTitle"
+                          :class="[
+                            'details-input',
+                            snippetCreationStore.validateTitle
+                              ? 'border-white/10 focus:border-primary/70'
+                              : snippetTitle.length === 0
+                              ? 'border-white/10'
+                              : 'border-red-800',
+                          ]"
+                          placeholder="Send Transaction..."
                         />
-                      </button>
-                    </form>
+                        <div class="flex flex-row items-center justify-between">
+                          <p class="text-red-800/80 text-start text-xs">
+                            {{
+                              snippetTitle.length < 5
+                                ? "Title must be at least 5 characters long."
+                                : snippetTitle.length > 50
+                                ? "Title must be at most 50 characters long."
+                                : ""
+                            }}
+                          </p>
+                          <p class="text-white/50 text-right text-xs">
+                            {{ snippetTitle.length }} / 50
+                          </p>
+                        </div>
+                      </div>
+                    </div>
 
-                    <div
-                      v-for="tag in snippetTags"
-                      :key="tag"
-                      class="flex flex-row items-center justify-center text-white text-sm bg-white/5 p-2 px-3 rounded-md text-center mr-2 mb-2 space-x-2"
-                    >
-                      <p>{{ tag }}</p>
-                      <button
-                        class="pb-0.5"
-                        @click="snippetCreationStore.deleteTag(tag)"
-                      >
-                        <icon
-                          name="line-md:close"
-                          size="15px"
-                          class="text-white/70"
+                    <div class="space-y-2 text-white/60 font-medium">
+                      <p>Snippet Description</p>
+                      <div class="space-y-2 flex flex-col">
+                        <textarea
+                          v-model="snippetDescription"
+                          :class="[
+                            'details-input h-[95px] max-h-[95px]',
+                            snippetCreationStore.validateDescription
+                              ? 'border-white/10 focus:border-primary/70'
+                              : snippetDescription.length === 0
+                              ? 'border-white/10'
+                              : 'border-red-800',
+                          ]"
+                          rows="3"
+                          type="text"
+                          placeholder="You can simply substract the lamports you want to transfer from the sender's balance and add it to the receiver's balance..."
                         />
-                      </button>
+                        <div class="flex flex-row items-center justify-between">
+                          <p class="text-red-800/80 text-left text-xs">
+                            {{
+                              snippetDescription.length < 30
+                                ? "Description must be at least 30 characters long."
+                                : snippetDescription.length > 1000
+                                ? "Description must be at most 1000 characters long."
+                                : ""
+                            }}
+                          </p>
+                          <p class="text-white/50 text-right text-xs">
+                            {{ snippetDescription.length }} / 1000
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="space-y-2 text-white/60 font-medium bg-surface border border-white/5 h-full px-5 py-2.5 rounded-2xl"
+                  >
+                    <p>Framework</p>
+                    <framework-selector />
+                  </div>
+                </div>
+
+                <div
+                  class="w-1/3 space-y-5 bg-surface border border-white/5 h-full p-5 rounded-2xl"
+                >
+                  <div class="space-y-3 text-white/60 font-medium">
+                    <p>Keywords</p>
+                    <div class="lex flex-col items-start justify-start">
+                      <form
+                        class="w-full flex flex-row items-center justify-start space-x-2 mr-4 mb-4"
+                        @submit.prevent
+                      >
+                        <input
+                          v-model="tagInput"
+                          class="details-input border-white/5 focus:border-white/10"
+                          placeholder="Add Tag..."
+                        />
+                        <button
+                          class="text-white text-sm border-[1.5px] border-white/5 px-3 h-11 rounded-md"
+                          :disabled="
+                            !snippetCreationStore.validateTagContent(
+                              tagInput,
+                            ) || snippetCreationStore.tagExists(tagInput)
+                          "
+                          @click="snippetCreationStore.addTag(tagInput)"
+                          @click.prevent
+                        >
+                          <icon
+                            name="line-md:plus"
+                            size="20px"
+                            :class="[
+                              'transition-all',
+                              snippetCreationStore.validateTagContent(
+                                tagInput,
+                              ) &&
+                              !snippetCreationStore.tagExists(tagInput) &&
+                              snippetTags.length < 5
+                                ? 'text-white/70'
+                                : 'text-white/30',
+                            ]"
+                          />
+                        </button>
+                      </form>
+
+                      <div v-if="snippetTags.length > 0" class="space-y-2">
+                        <div
+                          v-for="tag in snippetTags"
+                          :key="tag"
+                          class="flex flex-row items-center justify-between text-white/80 text-sm bg-white/0 border border-white/5 p-2 px-3 rounded-md text-center"
+                        >
+                          <p class="text-start truncate">{{ tag }}</p>
+                          <button
+                            class="pb-0.5"
+                            @click="snippetCreationStore.deleteTag(tag)"
+                          >
+                            <icon
+                              name="line-md:close"
+                              size="15px"
+                              class="text-white/70"
+                            />
+                          </button>
+                        </div>
+                      </div>
+                      <p v-else class="mt-4 ml-1 text-white/30 text-sm">
+                        Add some tags...
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -344,34 +423,33 @@ const prettyCode = computed(() => {
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Bottom Actions -->
-    <div class="w-[1000px] h-16 relative">
-      <!-- Code Editing Info -->
-      <transition name="blur-left">
-        <div
-          v-if="mode == CreationMode.edit"
-          class="h-[55px] gradient-border p-0.5 absolute left-0 flex flex-row space-x-0.5 text-white/80"
-        >
+      <!-- Bottom Actions -->
+      <div class="editor-width h-16 relative">
+        <!-- Code Editing Info -->
+        <transition name="blur-left">
           <div
-            class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-4 space-x-2"
+            v-if="mode == CreationMode.edit"
+            class="h-[55px] gradient-border p-0.5 absolute left-0 flex flex-row space-x-0.5 text-white/80"
           >
-            <icon name="clarity:code-line" size="2em" />
-            <p class="text-lg min-w-[30px]">
-              {{ snippetCode.length }}
-            </p>
-          </div>
-          <div
-            class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
-          >
-            <icon name="system-uicons:paragraph-left" size="2em" />
-            <p class="text-lg">
-              {{ snippetCode.split("\n").length }}
-            </p>
-          </div>
+            <div
+              class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-4 space-x-2"
+            >
+              <icon name="clarity:code-line" size="2em" />
+              <p class="text-lg min-w-[30px]">
+                {{ snippetCode.length }}
+              </p>
+            </div>
+            <div
+              class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
+            >
+              <icon name="system-uicons:paragraph-left" size="2em" />
+              <p class="text-lg">
+                {{ snippetCode.split("\n").length }}
+              </p>
+            </div>
 
-          <div
+            <!-- <div
             class="bg-background flex flex-row items-center rounded-sm p-2 px-4 space-x-2"
           >
             <icon name="clarity:bolt-line" size="1.35em" />
@@ -381,129 +459,139 @@ const prettyCode = computed(() => {
             >
               Format
             </button>
-          </div>
-
-          <div
-            class="bg-background flex flex-row items-center rounded-l-sm rounded-r-xl p-2 px-4 space-x-2"
-          >
-            <div class="scale-90">
-              <framework-selector />
-            </div>
-          </div>
-        </div>
-      </transition>
-
-      <!-- Marker Groups -->
-      <transition name="blur-left">
-        <div
-          v-if="mode == CreationMode.select"
-          class="absolute left-0 gradient-border max-w-2xl p-0.5"
-        >
-          <div
-            class="h-[55px] flex flex-row items-center rounded-xl space-x-0.5 overflow-x-hidden"
-          >
-            <div
-              :class="[
-                'h-[55px] w-fit  bg-background flex flex-row items-center rounded-l-xl p-2 px-6 space-x-2',
-                markerGroups.length > 0 ? 'rounded-r-sm' : 'rounded-r-xl',
-              ]"
-            >
-              <button
-                :disabled="false"
-                class="transition-all duration-300 whitespace-nowrap text-white/70 hover:text-primary active:text-primary/50"
-                @click="togglePreview"
-              >
-                <icon name="ph:eye" size="25px" />
-              </button>
-            </div>
-            <div
-              :class="[
-                'h-[55px] w-fit  bg-background flex flex-row items-center rounded-l-sm p-2 px-6 space-x-2',
-                markerGroups.length > 0 ? 'rounded-r-sm' : 'rounded-r-xl',
-              ]"
-            >
-              <button
-                :disabled="false"
-                class="transition-all duration-300 whitespace-nowrap hover:text-primary active:text-primary/50"
-                @click="createMarkerGroup"
-              >
-                Add Marker
-              </button>
-            </div>
+          </div> -->
 
             <div
-              v-if="markerGroups.length > 0"
-              :class="[
-                'flex flex-row items-start justify-start space-x-3 bg-background rounded-l-sm rounded-r-xl py-2 pl-1 pr-3 w-max overflow-x-auto',
-                { 'ml-4': markerGroups.length > 0 },
-              ]"
+              class="bg-background flex flex-row items-center rounded-l-sm rounded-r-xl p-2 px-4 space-x-2"
             >
-              <div class="flex flex-row items-center space-x-2 pl-2">
-                <button
-                  v-for="(markerGroup, index) in markerGroups"
-                  :key="index"
-                  :class="[
-                    'rounded-md text-white/80 h-10 w-40 transition-all',
-                    { 'scale-105': markerGroup.id === selectedMarkerGroup },
-                    {
-                      'brightness-[0.3]':
-                        markerGroup.id !== selectedMarkerGroup,
-                    },
-                  ]"
-                  :style="`background: linear-gradient(130deg, ${markerGroup.color}05, ${markerGroup.color}10); border: 1.5px solid ${markerGroup.color}60`"
-                  @click="selectedMarkerGroup = markerGroup.id"
-                  @focus="selectedMarkerGroup = markerGroup.id"
-                >
-                  <input
-                    v-model="markerGroup.name"
-                    class="bg-transparent text-white/80 placeholder:text-white/40 text-center w-full h-full"
-                    type="text"
-                    placeholder="Group Name"
-                  />
-                </button>
+              <div class="scale-90">
+                <framework-selector />
               </div>
             </div>
           </div>
-        </div>
-      </transition>
+        </transition>
 
-      <div
-        class="h-[55px] gradient-border p-0.5 flex flex-row space-x-0.5 absolute right-0 top-0 font-medium"
-      >
-        <div
-          class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-6 space-x-2"
-        >
-          <button
-            :disabled="previousButtonDisabled"
-            :class="[
-              'transition-all duration-300',
-              previousButtonDisabled
-                ? 'opacity-30'
-                : 'hover:text-primary active:text-primary/50',
-            ]"
-            @click="onPrevious"
+        <!-- Marker Groups -->
+        <transition name="blur-left">
+          <div
+            v-if="mode == CreationMode.select"
+            class="absolute left-0 gradient-border max-w-2xl p-0.5"
           >
-            Previous
-          </button>
-        </div>
+            <div
+              class="h-[55px] flex flex-row items-center rounded-xl space-x-0.5 overflow-x-hidden"
+            >
+              <div
+                :class="[
+                  'h-[55px] w-fit  bg-background flex flex-row items-center rounded-l-xl p-2 px-6 space-x-2',
+                  markerGroups.length > 0 ? 'rounded-r-sm' : 'rounded-r-xl',
+                ]"
+              >
+                <button
+                  :disabled="false"
+                  class="transition-all duration-300 whitespace-nowrap text-white/70 hover:text-primary active:text-primary/50"
+                  @click="togglePreview"
+                >
+                  <icon name="ph:eye" size="25px" />
+                </button>
+              </div>
+              <div
+                :class="[
+                  'h-[55px] w-fit  bg-background flex flex-row items-center rounded-l-sm p-2 px-6 space-x-2',
+                  markerGroups.length > 0 ? 'rounded-r-sm' : 'rounded-r-xl',
+                ]"
+              >
+                <button
+                  :disabled="false"
+                  class="transition-all duration-300 whitespace-nowrap hover:text-primary active:text-primary/50"
+                  @click="createMarkerGroup"
+                >
+                  Add Marker
+                </button>
+              </div>
+
+              <div
+                v-if="markerGroups.length > 0"
+                :class="[
+                  'flex flex-row items-start justify-start space-x-3 bg-background rounded-l-sm rounded-r-xl py-2 pl-1 pr-3 w-max overflow-x-auto',
+                  { 'ml-4': markerGroups.length > 0 },
+                ]"
+              >
+                <div class="flex flex-row items-center space-x-2 pl-2">
+                  <button
+                    v-for="(markerGroup, index) in markerGroups"
+                    :key="index"
+                    :class="[
+                      'rounded-md text-white/80 h-10 w-40 transition-all',
+                      { 'scale-105': markerGroup.id === selectedMarkerGroup },
+                      {
+                        'brightness-[0.3]':
+                          markerGroup.id !== selectedMarkerGroup,
+                      },
+                    ]"
+                    :style="`background: linear-gradient(130deg, ${markerGroup.color}05, ${markerGroup.color}10); border: 1.5px solid ${markerGroup.color}60`"
+                    @click="selectedMarkerGroup = markerGroup.id"
+                    @focus="selectedMarkerGroup = markerGroup.id"
+                  >
+                    <input
+                      v-model="markerGroup.name"
+                      class="bg-transparent text-white/80 placeholder:text-white/40 text-center w-full h-full"
+                      type="text"
+                      placeholder="Group Name"
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
 
         <div
-          class="bg-background flex flex-row items-center rounded-r-xl rounded-l-sm p-2 px-6 space-x-2"
+          class="h-[55px] gradient-border p-0.5 flex flex-row space-x-0.5 absolute right-0 top-0 font-medium"
         >
-          <button
-            :disabled="nextButtonDisabled"
-            :class="[
-              'transition-all duration-300',
-              nextButtonDisabled
-                ? 'opacity-30'
-                : 'hover:text-primary active:text-primary/50',
-            ]"
-            @click="onNext"
+          <div
+            class="bg-background flex flex-row items-center rounded-l-xl rounded-r-sm p-2 px-6 space-x-2"
           >
-            Next
-          </button>
+            <button
+              :disabled="previousButtonDisabled"
+              :class="[
+                'transition-all duration-300',
+                previousButtonDisabled
+                  ? 'opacity-30'
+                  : 'hover:text-primary active:text-primary/50',
+              ]"
+              @click="onPrevious"
+            >
+              Previous
+            </button>
+          </div>
+
+          <div
+            class="bg-background flex flex-row items-center rounded-r-xl rounded-l-sm p-2 px-6 space-x-2"
+          >
+            <button
+              :disabled="nextButtonDisabled"
+              :class="[
+                'transition-all duration-300',
+                nextButtonDisabled
+                  ? 'opacity-30'
+                  : 'hover:text-primary active:text-primary/80',
+              ]"
+              @click="onNext"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+
+    <div
+      class="h-screen w-screen flex md:hidden flex-col items-center justify-center"
+    >
+      <p class="text-center p-10">
+        Please switch to a larger screen <br />
+        to interact with the snippet creator.
+      </p>
     </div>
   </div>
 </template>
@@ -559,8 +647,12 @@ const prettyCode = computed(() => {
   @apply p-0.5 rounded-2xl;
 }
 
+.editor-width {
+  @apply w-[90vw] max-w-[1000px];
+}
+
 .snippet-container {
-  @apply rounded-xl w-[1000px] h-[550px] backdrop-blur-2xl bg-background;
+  @apply h-[60vh] max-h-[550px] overflow-x-scroll rounded-xl backdrop-blur-2xl bg-background;
   /* background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0.5) 0%,
@@ -594,7 +686,7 @@ const prettyCode = computed(() => {
 }
 
 .details-input {
-  @apply text-white placeholder:text-white/40 w-full bg-transparent border-[1.5px] border-white/10 focus:border-secondary p-2 px-4 rounded-md text-start transition-colors duration-500;
+  @apply text-white placeholder:text-white/40 w-full bg-transparent border-[1.5px] p-2 px-4 rounded-md text-start transition-colors duration-500;
 }
 
 .animate-next {

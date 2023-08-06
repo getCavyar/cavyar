@@ -13,13 +13,10 @@ export type DialogAction = {
 };
 
 export const useDialogStore = defineStore("dialogStore", () => {
-  const showDialog = useSessionStorage<boolean>("showDialog", () => false);
-  const dialogType = useSessionStorage<DialogType>(
-    "dialogType",
-    () => DialogType.Info
-  );
-  const dialogContent = useSessionStorage<string>("dialogContent", () => "");
-  const dialogActions = useSessionStorage<DialogAction[]>("actions", () => []);
+  const showDialog = useState<boolean>("showDialog", () => false);
+  const dialogType = useState<DialogType>("dialogType", () => DialogType.Info);
+  const dialogContent = useState<string>("dialogContent", () => "");
+  const dialogActions = useState<DialogAction[]>("actions", () => []);
 
   const openDialog = (
     type: DialogType,
@@ -31,7 +28,7 @@ export const useDialogStore = defineStore("dialogStore", () => {
           closeDialog();
         },
       },
-    ]
+    ],
   ) => {
     dialogType.value = type;
     dialogContent.value = content;

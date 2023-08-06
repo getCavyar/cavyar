@@ -20,7 +20,7 @@ const addMarker = () => {
       selection.startLineNumber,
       selection.startColumn,
       selection.endLineNumber,
-      selection.endColumn
+      selection.endColumn,
     );
 
     // check if there is a marker inside the range
@@ -32,8 +32,8 @@ const addMarker = () => {
               marker.startRow,
               marker.startCol,
               marker.endRow,
-              marker.endCol
-            )
+              marker.endCol,
+            ),
           ) !== null
         );
       })
@@ -56,8 +56,6 @@ const addMarker = () => {
       return group.id === selectedMarkerGroup.value;
     })[0];
 
-    console.log({ group });
-
     if (!group) return;
     group.markers.push({
       id,
@@ -72,12 +70,10 @@ const addMarker = () => {
     style.innerHTML = `#${styleId} { color: ${group.color}; }`;
     style.innerHTML = `.${styleId} { background-color: ${group.color}70;}`;
     document.getElementsByTagName("head")[0].appendChild(style);
-  } catch (e) {
-    console.log(e);
-  }
+  } catch (e) {}
 };
 
-const removeMarker = () => {
+/* const removeMarker = () => {
   const editor = monacoRef.value!.editor.getEditors()[0];
   const selection = editor.getSelection()!;
 
@@ -92,7 +88,6 @@ const removeMarker = () => {
     .getModel()!
     .getDecorationsInRange(selectionRange);
 
-  console.log({ decorationsInRange });
 
   editor.removeDecorations(
     decorationsInRange.map((decoration) => {
@@ -106,6 +101,72 @@ const removeMarker = () => {
       return decoration.id;
     })
   );
+
+}; */
+
+const removeMarker = () => {
+  try {
+    const editor = monacoRef.value!.editor.getEditors()[0];
+    const selection = editor.getSelection()!;
+
+    const selectionRange = new Range(
+      selection.startLineNumber,
+      selection.startColumn,
+      selection.endLineNumber,
+      selection.endColumn,
+    );
+
+    // Find the marker that intersects with the selection range
+    const markerIndex = Object.values(markers.value).findIndex((marker) => {
+      return (
+        selection.intersectRanges(
+          new Range(
+            marker.startRow,
+            marker.startCol,
+            marker.endRow,
+            marker.endCol,
+          ),
+        ) !== null
+      );
+    });
+
+    // If no marker intersects with the selection range, there is nothing to remove
+    if (markerIndex === -1) return;
+
+    // Remove the marker from the markers array
+    const markerToRemove = markers.value[markerIndex];
+    markers.value.splice(markerIndex, 1);
+
+    // Get the corresponding decorations in the editor and remove them
+    const decorations = editor
+      .getModel()!
+      .getDecorationsInRange(
+        new Range(
+          markerToRemove.startRow,
+          markerToRemove.startCol,
+          markerToRemove.endRow,
+          markerToRemove.endCol,
+        ),
+      );
+    decorations.forEach((decoration) => {
+      editor.removeDecorations([decoration.id]);
+    });
+
+    // Remove the style element associated with the marker
+    const styleId = markerToRemove.styleId;
+    const styleElement = document.querySelector(`style#${styleId}`);
+    if (styleElement) {
+      styleElement.parentNode?.removeChild(styleElement);
+    }
+
+    // Optionally, you can also remove the marker from the marker group if desired
+    // const group = markerGroups.value.find((group) => group.id === selectedMarkerGroup.value);
+    // if (group) {
+    //   group.markers = group.markers.filter((marker) => marker.id !== markerToRemove.id);
+    // }
+  } catch (e) {
+    console.error(e);
+  }
 };
 </script>
 

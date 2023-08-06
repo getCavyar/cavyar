@@ -36,11 +36,23 @@ defineProps<{
           {{ shortenPublicKey(snippet.creator) }}
         </p>
       </div>
+
       <div
-        class="w-full flex flex-row items-center justify-end space-x-2 text-white/80"
+        class="w-full flex flex-row items-center justify-end space-x-3 text-white/60"
       >
-        <icon name="ph:heart-straight" size="1.4em" class="text-red-800/80" />
-        <p class="text-base">{{ snippet.likes.length }}</p>
+        <div
+          class="flex flex-row items-center space-x-2 border-r border-white/20 pr-3"
+        >
+          <p class="text-base">
+            {{ snippet.dislikes?.length ?? 0 }}
+          </p>
+          <icon name="mingcute:thumb-down-2-line" size="1.4em" />
+        </div>
+
+        <div class="flex flex-row items-center space-x-2">
+          <p class="text-base">{{ snippet.likes?.length ?? 0 }}</p>
+          <icon name="mingcute:thumb-up-2-line" size="1.4em" />
+        </div>
       </div>
     </div>
   </nuxt-link>
@@ -49,7 +61,7 @@ defineProps<{
 <style lang="postcss" scoped>
 .snippet-card {
   background: linear-gradient(140deg, #0c0c0c, #000000);
-  @apply h-[230px] min-w-[380px] w-[380px] px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-3xl border-[1.5px] border-white/10 cursor-pointer transition-all duration-300;
+  @apply h-[230px] min-w-[380px] w-[380px] px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-3xl border-[1.5px] border-white/10 overflow-hidden cursor-pointer transition-all duration-300;
 }
 .snippet-card:hover {
   @apply border-primary/70;

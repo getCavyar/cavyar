@@ -23,8 +23,9 @@ defineProps({
 </script>
 
 <template>
+  <!-- eslint-disable vue/no-mutating-props -->
   <div
-    class="w-1/2 max-w-3xl h-16 relative flex items-center justify-center group-scoped transition-all"
+    class="w-[calc(100%-30px)] sm:w-[calc(100%-100px)] md:w-[calc(100%-200px)] lg:max-w-3xl h-16 relative flex items-center justify-center group-scoped transition-all"
   >
     <input
       v-model="search.query"

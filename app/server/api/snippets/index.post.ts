@@ -1,6 +1,9 @@
 import { ObjectId } from "mongodb";
+import { Document } from "langchain/document";
+import { OpenAIEmbeddings } from "langchain/embeddings/openai";
+import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { isAuthenticated } from "~/server/utils/auth";
-import { snippetsRef } from "~~/server/plugins/mongodb";
+import { snippetsRef, usersRef } from "~~/server/plugins/mongodb";
 import { SuccessResponse } from "~~/server/utils/responses";
 import { postSnippetValidator } from "~~/server/utils/validators";
 import { POSTSnippet } from "~~/ts/types";
@@ -14,9 +17,38 @@ export default defineEventHandler(async (event) => {
       return ErrorResponse.new(400, DefaultResponses.InvalidRequestBody, null);
     }
 
-    await isAuthenticated(event);
+    const session = await isAuthenticated(event);
 
     const createdAt = Date.now();
+
+    const user = await usersRef.findOne({ publicKey: session.user!.name! });
+
+    let aiExplanation: string | null = null;
+
+    if (user?.username && body.framework !== "seahorse") {
+      const vectorStore = await HNSWLib.fromDocuments(
+        [
+          new Document({
+            pageContent: `Snippet Code: \n${body.code}`,
+            metadata: {
+              title: body.title,
+              description: body.description,
+              tags: body.tags,
+            },
+          }),
+        ],
+        new OpenAIEmbeddings(),
+      );
+
+      const chain = makeChain(vectorStore);
+
+      const res = await chain.call({
+        question: body.code,
+      });
+
+      aiExplanation = res.text;
+    }
+
     const snippets = await snippetsRef.insertOne({
       _id: ObjectId.createFromTime(createdAt / 1000),
       title: body.title,
@@ -29,13 +61,13 @@ export default defineEventHandler(async (event) => {
       updatedAt: null,
       likes: [],
       dislikes: [],
-      aiExplanation: body.aiExplanation ?? null,
+      aiExplanation,
     });
 
     return SuccessResponse.new<string>(
       200,
       "Snippet created",
-      snippets.insertedId.toString()
+      snippets.insertedId.toString(),
     );
   } catch (error) {
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);

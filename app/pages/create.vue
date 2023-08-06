@@ -10,17 +10,20 @@ const snippetCreationStore = useSnippetCreationStore();
 const {
   monacoRef,
   snippetCode,
-  mode,
-  markerGroups,
+  // mode,
+  // markerGroups,
   snippetDescription,
   snippetTitle,
   snippetFramework,
   snippetTags,
+  selectedSnippetFrameworkLanguage,
 } = storeToRefs(snippetCreationStore);
 
 const { openDialog } = useDialogStore();
 
 const { showConnectWalletDialog } = storeToRefs(useConnectWalletStore());
+
+const showLoadingScreen = useState("showLoadingScreen", () => false);
 
 const onFinished = async () => {
   try {
@@ -28,11 +31,6 @@ const onFinished = async () => {
       openDialog(DialogType.Error, "Internal error: Editor not initialized");
       return;
     }
-
-    const markedSnippetCode = snippetCreationStore.getSnippetCode(
-      snippetCode.value
-    );
-    console.log(markedSnippetCode);
 
     const { data: sessionData } = useAuth();
 
@@ -47,35 +45,29 @@ const onFinished = async () => {
               showConnectWalletDialog.value = true;
             },
           },
-        ]
+        ],
       );
       return;
     }
+
+    showLoadingScreen.value = true;
+
     const { data } = await useFetch("/api/snippets", {
       method: "POST",
       body: JSON.stringify({
         creator: sessionData.value.user.name,
         title: snippetTitle.value,
         description: snippetDescription.value,
-        code: markedSnippetCode,
+        code: snippetCode.value,
         tags: snippetTags.value,
         framework: snippetFramework.value,
       } as POSTSnippet),
     });
 
-    if (data) {
-      // @ts-ignore
+    if (data.value) {
       const id = data.value!.data.toString();
+      showLoadingScreen.value = false;
       await navigateTo(`/snippets/${id}`);
-
-      // clear editor
-      monacoRef.value.editor.getModels()[0].setValue("");
-      mode.value = 1;
-      markerGroups.value = [];
-      snippetDescription.value = "";
-      snippetTitle.value = "";
-      snippetFramework.value = "anchor";
-      snippetTags.value = [];
     } else {
       openDialog(DialogType.Error, "Snippet creation failed");
     }
@@ -84,6 +76,7 @@ const onFinished = async () => {
     console.error(e);
     openDialog(DialogType.Error, "Snippet creation failed");
   }
+  showLoadingScreen.value = false;
 };
 
 const containerRef = ref();
@@ -91,38 +84,60 @@ const containerRef = ref();
 const stop = watchEffect(() => {
   if (monacoRef.value && containerRef.value) {
     nextTick(() => stop());
+
+    const existingEditors = monacoRef.value.editor.getEditors();
+    if (existingEditors.length > 0) {
+      existingEditors[0].dispose();
+    }
     monacoRef.value.editor.create(containerRef.value, {
-      language: "typescript",
+      language: selectedSnippetFrameworkLanguage.value,
       theme: "vs-dark",
       fontSize: 20,
       readOnly: false,
+      minimap: {
+        enabled: false,
+      },
     });
   }
   snippetCreationStore.initEditor();
 });
 
 onUnmounted(() => {
-  if (monacoRef.value) {
-    snippetCreationStore.unload();
-  }
+  snippetCreationStore.unload();
 });
 </script>
 
 <template>
-  <div>
-    <lazy-selection-menu />
-
-    <nuxt-layout name="create" @finished="onFinished">
+  <div class="relative">
+    <Transition name="fade">
       <div
-        ref="containerRef"
-        style="--vscode-editor-background: #000000; height: 400px"
-      />
-      <!-- <lazy-code-editor
-        v-model="codeEditorValue"
-        :read-only="mode == CreationMode.select"
-      />  -->
+        v-if="showLoadingScreen"
+        class="absolute top-0 left-0 z-20 w-screen h-screen flex justify-center items-center bg-black/30 backdrop-blur-md"
+      >
+        <p class="text-2xl font-medium animate-pulse">
+          Generating AI description
+          <span class="animate-bounce">...</span>
+        </p>
+      </div>
+    </Transition>
+
+    <!-- <lazy-selection-menu /> -->
+    <nuxt-layout name="create" @finished="onFinished">
+      <div ref="containerRef" class="monaco-editor-wrapper" />
     </nuxt-layout>
   </div>
 </template>
 
-<style></style>
+<style>
+.monaco-editor-wrapper {
+  width: 100%;
+  height: 60vh !important;
+  max-height: 100% !important;
+}
+
+.monaco-editor .margin,
+.monaco-editor,
+.monaco-editor-background {
+  background-color: #000000 !important;
+}
+</style>

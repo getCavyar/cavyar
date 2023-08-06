@@ -1,7 +1,3 @@
-import { RuntimeConfig } from "nuxt/schema";
-import { encrypt, decrypt } from "./encryption"; // Replace with actual encryption functions
-import { usersRef } from "../plugins/mongodb";
-
 const config = useRuntimeConfig();
 
 export const getUserProfile = async (accessToken: string) => {
@@ -34,30 +30,4 @@ export const getAccessToken = async (code: string) => {
   });
   const data = await response.json();
   return data.access_token;
-};
-
-export const saveEncryptedAccessToken = async (
-  publicKey: string,
-  githubAccessToken: string
-) => {
-  const encryptedToken = encrypt(githubAccessToken); // Encrypt the token before saving
-  await usersRef.updateOne(
-    { publicKey }, // Assuming the publicKey field in the database represents the user identifier
-    {
-      $set: {
-        githubAccessToken: encryptedToken,
-      },
-    }
-  );
-};
-
-export const getDecryptedAccessToken = async (
-  publicKey: string
-): Promise<string | null> => {
-  const user = await usersRef.findOne({ publicKey });
-  if (user && user.githubAccessToken) {
-    const decryptedToken = decrypt(user.githubAccessToken); // Decrypt the token when needed
-    return decryptedToken;
-  }
-  return null;
 };

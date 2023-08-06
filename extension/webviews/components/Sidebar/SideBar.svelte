@@ -2,38 +2,57 @@
   import { navigate, Route, Router } from "svelte-navigator";
   import { writable } from "svelte/store";
   import { onMount } from "svelte/internal";
-  import type { Snippet } from "../../types";
   import SearchView from "./SearchView.svelte";
   import SearchHeader from "./SearchHeader.svelte";
   import Tabbar from "./Tabbar.svelte";
-
-  export let snippets: Snippet[] = [];
-
-  const selectedTab = writable("Zaps");
-  let pinnedSnippets: Snippet[] = [];
-
-  const pinSnippet = (snippet: Snippet) => {
-    pinnedSnippets = [...pinnedSnippets, snippet];
-  };
-
-  const fetchSnippets = async () => {
-    const response = await fetch("http://localhost:3000/api/snippets");
-    const data = await response.json();
-    return data.snippets;
-  };
+  import type { Snippet } from "@/src/types";
+  import { snippets, pinnedSnippets } from "@/webviews/store";
+  import { getDiscoverySnippets } from "@/src/api";
 
   onMount(async () => {
-    navigate("/zaps");
     window.addEventListener("message", (event) => {
       const { type, value } = event.data;
       switch (type) {
-        case "pinSnippet":
+        case "initialize":
+          console.log("Initializing snippet details", value);
+          pinnedSnippets.set(value);
+          break;
+        case "pinSnippetSidebar":
           pinSnippet(value);
           break;
       }
+
+      window.addEventListener("keydown", (event) => {
+        if (event.ctrlKey || event.metaKey) {
+          switch (event.key) {
+            case "Enter":
+              postMessage({
+                type: "pinSnippetShortcut",
+              });
+              break;
+            case "c":
+              postMessage({
+                type: "copySnippetShortcut",
+              });
+              break;
+          }
+        }
+      });
     });
-    snippets = await fetchSnippets();
+    navigate("/search");
+    const { topSnippets, recentSnippets } = await getDiscoverySnippets();
+    snippets.set([...topSnippets, ...recentSnippets]);
   });
+
+  const selectedTab = writable("Search");
+
+  const pinSnippet = (snippet: Snippet) => {
+    if ($pinnedSnippets.find((s) => s._id === snippet._id)) return;
+    // This is only there to update the svelte store, so that the UI updates
+    // It should not update the vscode state, as that is handled by the details webview
+    pinnedSnippets.set([...$pinnedSnippets, snippet]);
+    console.log("Pinning snippet", $pinnedSnippets);
+  };
 </script>
 
 <Router primary={false}>
@@ -50,11 +69,11 @@
     </div>
 
     <Route path="search">
-      <SearchView {pinnedSnippets} {snippets} />
+      <SearchView />
     </Route>
 
-    <Route path="zaps">
-      <div class="" />
+    <Route path="bookmarks">
+      <div class="soon-tm">Soon™</div>
     </Route>
   </div>
 </Router>
@@ -72,5 +91,15 @@
     padding-right: 15px;
     padding-bottom: 10px;
     padding-top: 3px;
+  }
+  .soon-tm {
+    height: calc(100vh - 200px);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--vscode-foreground);
   }
 </style>

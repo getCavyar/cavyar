@@ -20,20 +20,21 @@ defineProps({
 const getSpanWithHighlightedText = (
   text: string,
   query: string,
-  className: string
+  className: string,
 ) => {
   const regex = new RegExp(query, "gi");
   const match = text.match(regex);
   if (!match) return text;
   const highlightedText = text.replace(
     regex,
-    `<span class="${className}">$&</span>`
+    `<span class="${className}">$&</span>`,
   );
   return highlightedText;
 };
 </script>
 
 <template>
+  <!-- eslint-disable vue/no-v-html -->
   <div
     v-if="search.focused"
     class="gradient-border p-[1.5px] w-full absolute top-20 rounded-xl group-scoped-focus-within:w-[calc(100%-50px)] transition-all duration-500"
@@ -41,14 +42,11 @@ const getSpanWithHighlightedText = (
   >
     <div v-if="search.results?.length === 0">
       <div
-        class="bg-background rounded-[14px] p-12 shadow-black shadow-2xl w-full h-28 flex items-center justify-center text-white text-lg font-medium"
+        class="bg-background rounded-[16px] p-6 shadow-black shadow-2xl w-full h-fit flex items-center justify-center text-white/70 text-lg font-medium"
       >
-        <div class="flex flex-col items-center justify-center space-y-1">
-          <!-- <icon
-                        name="line-md:downloading-loop"
-                        size="30px"
-                        class="text-gray-200"
-                      /> -->
+        <div
+          class="text-center flex flex-col items-center justify-center space-y-1"
+        >
           <img
             src="@/assets/images/logo_transparent.png"
             class="h-8 my-2 spin-logo transition-all ease-in-out"
@@ -63,14 +61,14 @@ const getSpanWithHighlightedText = (
     </div>
     <div
       v-if="search.results?.length > 0"
-      class="bg-background w-full h-auto max-h-[50vh] overflow-y-auto rounded-[14px] shadow-black shadow-2xl transition-all duration-500 py-1"
+      class="bg-background w-full h-auto max-h-[64vh] overflow-y-auto rounded-[16px] shadow-black shadow-2xl transition-all duration-500 py-1"
     >
       <transition-group name="snippets-search-list" tag="div">
         <nuxt-link
           v-for="result in search.results"
           :key="result._id.toString()"
           :to="`/snippets/${result._id.toString()}`"
-          class="w-full py-5 h-fit flex flex-col items-start justify-start pl-5 text-white text-lg font-medium transition-all duration-75 relative group"
+          class="w-full rounded-[100px] py-5 h-fit flex flex-col items-start justify-start pl-5 text-white text-lg font-medium transition-all duration-75 relative group"
         >
           <div
             class="text-white/30 group-hover:block hidden absolute right-5 top-1/2 transform -translate-y-1/2"
@@ -83,7 +81,7 @@ const getSpanWithHighlightedText = (
               getSpanWithHighlightedText(
                 result.title,
                 search.query,
-                'text-primary'
+                'text-primary',
               )
             "
           />
@@ -93,7 +91,7 @@ const getSpanWithHighlightedText = (
               getSpanWithHighlightedText(
                 result.description,
                 search.query,
-                'bg-white/[0.15]'
+                'bg-white/[0.15]',
               )
             "
           />

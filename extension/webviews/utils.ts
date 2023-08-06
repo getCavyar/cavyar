@@ -1,17 +1,22 @@
 import seedrandom from "seedrandom";
+import { BASE_URL } from "@/src/constants";
 
 export const frameworks = {
   anchor: {
     name: "Anchor",
-    icon: "https://www.anchor-lang.com/_next/image?url=%2Flogo.png&w=64&q=75",
+    icon: `${BASE_URL}/icons/anchor.png`,
+  },
+  native: {
+    name: "Native",
+    icon: `${BASE_URL}/icons/solana.png`,
   },
   typescript: {
     name: "Typescript",
-    icon: "https://cdn-icons-png.flaticon.com/512/5968/5968381.png",
+    icon: `${BASE_URL}/icons/typescript.webp`,
   },
   seahorse: {
     name: "Seahorse",
-    icon: "https://pbs.twimg.com/profile_images/1556384244598964226/S3cx06I2_400x400.jpg",
+    icon: `${BASE_URL}/icons/seahorse.jpeg`,
   },
 };
 
@@ -23,9 +28,12 @@ export const getFrameworkIcon = (selectedFramework: string) => {
       return frameworks.typescript.icon;
     case "seahorse":
       return frameworks.seahorse.icon;
+    case "native":
+      return frameworks.native.icon;
   }
 };
 
+// TODO - replace this with user.avatarUrl
 export const generateAvatar = (id: string): string => {
   // Define the size of the avatar (in pixels)
   const size = 40;
@@ -66,4 +74,15 @@ export const generateAvatar = (id: string): string => {
 
   // Return the base64-encoded data URI of the canvas
   return canvas.toDataURL();
+};
+
+export const debounce = <T extends (...args: any[]) => void>(
+  func: T,
+  delay: number
+) => {
+  let timeoutId: NodeJS.Timeout;
+  return function (this: any, ...args: Parameters<T>) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func.apply(this, args), delay);
+  };
 };

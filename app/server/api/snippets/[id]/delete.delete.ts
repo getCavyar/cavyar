@@ -5,23 +5,16 @@ import { snippetsRef } from "~/server/plugins/mongodb";
 export default defineEventHandler(async (event) => {
   try {
     const id = event.context.params?.id;
-    const session = await getServerSession(event);
+    const session = await isAuthenticated(event);
 
-    if (!session?.user?.name) {
-      return ErrorResponse.unauthorized();
-    }
+    const result = await snippetsRef.deleteOne({
+      _id: new ObjectId(id),
+      creator: session.user!.name!,
+    });
 
-    const snippet = await snippetsRef.findOne({ _id: new ObjectId(id) });
-
-    if (!snippet) {
+    if (result.deletedCount === 0) {
       return ErrorResponse.notFound();
     }
-
-    if (snippet.creator !== session.user.name) {
-      return ErrorResponse.unauthorized();
-    }
-
-    await snippetsRef.deleteOne({ _id: new ObjectId(id) });
 
     return SuccessResponse.default();
   } catch (error) {

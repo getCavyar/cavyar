@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PublicKey } from "@solana/web3.js";
 import { Snippet, User } from "~/ts/types";
-import { getAvatar, shortenPublicKey } from "~/ts/utils";
+import { getAvatar, shortenPublicKey, signInWithGithub } from "~/ts/utils";
 
 const route = useRoute();
 
@@ -10,6 +10,8 @@ const { pubKey } = route.params;
 const isValidPubKey = computed(() => {
   return PublicKey.isOnCurve(pubKey);
 });
+
+const authState = useAuthState();
 
 const fetchData = async ({
   currentPage,
@@ -44,6 +46,7 @@ const { data: snippetsData } = await useAsyncData(
       },
     }),
   {
+    lazy: !isValidPubKey.value,
     transform: (value) => {
       return value.data as {
         userSnippets: Snippet[];
@@ -51,17 +54,18 @@ const { data: snippetsData } = await useAsyncData(
         totalLikesCount: number;
       };
     },
-  }
+  },
 );
 
 const { data: userData } = await useAsyncData(
   "user",
   () => $fetch(`/api/users/${pubKey}/profile`),
   {
+    lazy: !isValidPubKey.value,
     transform: (value) => {
       return value.data as User;
     },
-  }
+  },
 );
 
 const userPage = ref<HTMLElement | null>(null);
@@ -74,7 +78,7 @@ if (process.client) {
     },
     {
       distance: 400,
-    }
+    },
   );
 }
 
@@ -93,20 +97,15 @@ const userSnippets = useState("userSnippets", () => {
 const config = useRuntimeConfig();
 
 const onClickGithubButton = () => {
-  if (userData.value?.username) {
-    disconnectGithub();
+  if (
+    // If this is the user's profile page and they haven't connected their Github account yet
+    userData.value?.publicKey === authState.data.value?.user?.name &&
+    !userData.value?.username
+  ) {
+    signInWithGithub(config.public.githubClientId);
   } else {
-    signInWithGithub();
+    window.open(`https://github.com/${userData.value?.username}`, "_blank");
   }
-};
-
-const disconnectGithub = () => {};
-
-const signInWithGithub = () => {
-  const redirectUri = "http://localhost:3000/api/github/callback";
-  const authUrl = `https://github.com/login/oauth/authorize?client_id=${config.public.githubClientId}&redirect_uri=${redirectUri}`;
-
-  window.location.href = authUrl;
 };
 </script>
 
@@ -134,7 +133,11 @@ const signInWithGithub = () => {
 
                 <button
                   v-tooltip="
-                    userData.username ? 'Disconnect Github' : 'Connect Github'
+                    userData.username
+                      ? 'Visit profile'
+                      : userData.publicKey === authState.data.value?.user?.name
+                      ? 'Connect Github'
+                      : 'User has not connected Github'
                   "
                   :class="[
                     'github-button',
@@ -165,7 +168,7 @@ const signInWithGithub = () => {
           <div class="space-y-8 flex flex-col items-start justify-center">
             <div class="top-5 space-x-8 flex flex-row text-lg font-medium">
               <p class="border-b-2 border-primary/80 pb-2">Snippets</p>
-              <p class="text-white/50">Saved</p>
+              <p class="text-white/50 cursor-not-allowed">Bookmarks</p>
             </div>
 
             <div
@@ -185,12 +188,12 @@ const signInWithGithub = () => {
                   v-for="snippet in userSnippets"
                   :key="snippet._id.toString()"
                   :to="`/snippets/${snippet._id.toString()}`"
-                  class="snippet-card w-full"
+                  class="snippet-card"
                 >
-                  <p class="text-xl font-medium text-white/90 line-clamp-2">
-                    {{ snippet.title }}
+                  <p class="text-xl font-medium text-white/90 line-clamp-1">
+                    {{ snippet.title.repeat(2) }}
                   </p>
-                  <p class="text-sm text-white/80 line-clamp-2">
+                  <p class="w-full text-sm text-white/80 line-clamp-2">
                     {{ snippet.description }}
                   </p>
                   <div class="flex flex-wrap items-start justify-start">
@@ -220,14 +223,21 @@ const signInWithGithub = () => {
                       </p>
                     </div>
                     <div
-                      class="w-full flex flex-row items-center justify-end space-x-2 text-white/80"
+                      class="w-full flex flex-row items-center justify-end space-x-3 text-white/60"
                     >
-                      <icon
-                        name="ph:heart-straight"
-                        size="1.4em"
-                        class="text-red-800/80"
-                      />
-                      <p class="text-base">{{ snippet.likes.length }}</p>
+                      <div
+                        class="flex flex-row items-center space-x-2 border-r border-white/20 pr-3"
+                      >
+                        <p class="text-base">
+                          {{ snippet.dislikes.length }}
+                        </p>
+                        <icon name="mingcute:thumb-down-2-line" size="1.4em" />
+                      </div>
+
+                      <div class="flex flex-row items-center space-x-2">
+                        <p class="text-base">{{ snippet.likes.length }}</p>
+                        <icon name="mingcute:thumb-up-2-line" size="1.4em" />
+                      </div>
                     </div>
                   </div>
                 </nuxt-link>
@@ -255,11 +265,11 @@ const signInWithGithub = () => {
             <div v-else>
               <p class="text-white/80">
                 No snippets found.
-                <nuxt-link
+                <a
                   v-if="userData?.publicKey === pubKey"
                   class="text-primary/80 hover:underline"
-                  to="/create"
-                  >Create one</nuxt-link
+                  href="/create"
+                  >Create one</a
                 >
               </p>
             </div>
@@ -273,7 +283,7 @@ const signInWithGithub = () => {
 <style lang="postcss" scoped>
 .snippet-card {
   background: linear-gradient(140deg, #0c0c0c, #000000);
-  @apply px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-2xl border-[1.5px] border-white/10 cursor-pointer transition-all duration-300;
+  @apply px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-2xl border-[1.5px] border-white/10 overflow-hidden cursor-pointer transition-all duration-300;
 }
 
 .snippet-card:hover {

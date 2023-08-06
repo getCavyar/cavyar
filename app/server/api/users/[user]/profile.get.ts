@@ -5,16 +5,16 @@ export default defineEventHandler(async (event) => {
   try {
     const pubKey = event.context.params?.user;
 
-    const userProfile = await usersRef.find({ publicKey: pubKey }).toArray();
+    const userProfile = await usersRef.findOne({ publicKey: pubKey });
 
-    if (userProfile.length === 0) {
+    if (!userProfile) {
       return ErrorResponse.new(404, "User not found", null);
     }
 
     return SuccessResponse.new<User>(
       200,
       "Operation was successful",
-      userProfile[0]
+      userProfile
     );
   } catch (error) {
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);

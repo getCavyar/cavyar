@@ -12,7 +12,7 @@ const { data: discoveryResponse } = await useAsyncData(
       // @ts-ignore
       return value.data as DiscoveryResponse;
     },
-  }
+  },
 );
 
 const search = reactive({
@@ -79,32 +79,34 @@ onMounted(() => {
         class="w-screen h-screen backdrop-blur-2xl z-10 absolute pointer-events-none"
       />
       <div
-        class="radial-gradient pb-5 h-screen w-screen fixed z-0 flex flex-col items-center justify-center space-y-8"
+        class="pb-5 h-screen w-screen fixed z-0 flex flex-col items-center justify-center space-y-8"
       >
         <div
-          class="radial-gradient pb-5 h-screen w-screen z-0 flex"
+          class="pb-5 h-screen w-screen z-0 flex"
           @click="search.focused = false"
         >
           <div
             :class="[
               'w-full flex items-center justify-center flex-col space-y-2 transition-all duration-500',
-              search.focused ? 'mb-[calc(50vh-80px)]' : 'pt-0',
+              search.focused ? 'mb-[60vh]' : 'pt-0',
             ]"
           >
             <div class="relative h-24 flex items-center justify-center">
               <img
                 src="@/assets/images/logo_transparent.png"
                 :class="[
-                  'transition-all duration-700 cavyar-logo-animation',
+                  'transition-all duration-700 cavyar-logo-animation object-contain',
                   search.focused
                     ? 'h-28 mb-3 rotate-90 blur-2xl'
-                    : 'h-[600px] mt-20 blur-xl opacity-50 brightness-[0.4]',
+                    : 'h-[40vw] mt-20 blur-[20px] opacity-60 brightness-[0.4]',
                 ]"
               />
               <h1
                 :class="[
                   'absolute font-bold tracking-wide transition-all duration-700',
-                  search.focused ? 'text-[60px]' : 'text-[70px]',
+                  search.focused
+                    ? 'text-[50px] sm:text-[60px]'
+                    : 'text-[60px] sm:text-[70px]',
                 ]"
               >
                 CAVYAR
@@ -113,13 +115,13 @@ onMounted(() => {
 
             <index-search-box
               :search="search"
-              :isFetching="isFetching"
-              :querySnippets="querySnippets"
+              :is-fetching="isFetching"
+              :query-snippets="querySnippets"
             >
               <transition name="blur-up">
                 <index-search-results
                   :search="search"
-                  :isFetching="isFetching"
+                  :is-fetching="isFetching"
                 />
               </transition>
             </index-search-box>
@@ -134,8 +136,9 @@ onMounted(() => {
         style="box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.3)"
       >
         <div
-          class="space-y-3 flex flex-col p-10"
           v-for="category in ['Popular', 'Recent']"
+          :key="category"
+          class="space-y-3 flex flex-col p-10"
         >
           <div class="flex flex-row items-center justify-center space-x-5">
             <div class="w-full h-0.5 bg-white/10" />
@@ -164,14 +167,6 @@ onMounted(() => {
 </template>
 
 <style scoped lang="postcss">
-.radial-gradient {
-  /* background: radial-gradient(
-    ellipse at top,
-    rgba(var(--primary), 0.3) 0%,
-    black 75%
-  ); */
-}
-
 .gradient-border {
   background: linear-gradient(
     200deg,

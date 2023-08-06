@@ -30,8 +30,8 @@ export default defineNuxtConfig({
     renderJsonPayloads: false,
   },
   routeRules: {
-    "/create": { ssr: true },
-    "/snippets/:id": { ssr: false },
+    "/create": { ssr: false },
+    "/snippets/:id": { ssr: true },
   },
   modules: [
     "@sidebase/nuxt-auth",
@@ -41,7 +41,7 @@ export default defineNuxtConfig({
     "@nuxtjs/tailwindcss",
     "nuxt-icon",
     "nuxt-monaco-editor",
-    "@nuxtjs/fontaine",
+    // "@nuxtjs/fontaine",
     "floating-vue/nuxt",
     // "nuxt-security",
   ],
@@ -70,13 +70,14 @@ export default defineNuxtConfig({
     encryptionKey: process.env.ENCRYPTION_KEY,
     // Public Variables
     public: {
+      baseUrl: process.env.BASE_URL,
       githubClientId: process.env.GITHUB_CLIENT_ID,
       auth: {
         computed: {
-          origin: process.env.AUTH_ORIGIN,
+          origin: process.env.BASE_URL,
         },
       },
-      nextauthUrl: process.env.NEXTAUTH_URL,
+      nextauthUrl: process.env.BASE_URL,
     },
   },
   tailwindcss: {
@@ -130,6 +131,7 @@ export default defineNuxtConfig({
     },
     define: {
       "process.env.BROWSER": true,
+      "process.env.BASE_URL": JSON.stringify(process.env.BASE_URL),
     },
   },
 });

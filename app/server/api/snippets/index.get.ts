@@ -4,6 +4,13 @@ import { Snippet, DiscoveryResponse } from "~~/ts/types";
 
 export default defineEventHandler(async (event) => {
   try {
+    setResponseHeaders(event, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": "true",
+      "Access-Control-Allow-Headers": "*",
+      "Access-Control-Expose-Headers": "*",
+    });
+
     const { query, discovery } = getQuery(event) as {
       query?: string;
       discovery?: string;
@@ -19,6 +26,7 @@ export default defineEventHandler(async (event) => {
             { description: { $regex: regex } },
             { tags: { $regex: regex } },
             { code: { $regex: regex } },
+            { aiExplanation: { $regex: regex } },
           ],
         })
         .limit(15)
@@ -27,13 +35,13 @@ export default defineEventHandler(async (event) => {
       const queryLower = query.toLowerCase();
 
       snippets.sort((a: Snippet, b: Snippet) =>
-        compareSnippet(a, b, queryLower)
+        compareSnippet(a, b, queryLower),
       );
 
       return SuccessResponse.new<Snippet[]>(
         200,
         "Operation was successful",
-        snippets
+        snippets,
       );
     }
     if (discovery !== undefined && discovery === "true") {
@@ -68,7 +76,7 @@ export default defineEventHandler(async (event) => {
         {
           topSnippets,
           recentSnippets,
-        }
+        },
       );
     } else {
       return ErrorResponse.new(400, "No query provided", null);
