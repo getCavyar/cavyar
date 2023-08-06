@@ -13,15 +13,20 @@ export default defineEventHandler(async (event) => {
     }
 
     const snippet = await snippetsRef.findOne({ _id: new ObjectId(id) });
-    if (snippet?.likes.includes(session.user.name)) {
+    if (snippet?.likes?.includes(session.user.name)) {
       await snippetsRef.updateOne(
         { _id: new ObjectId(id) },
-        { $pull: { likes: session.user.name } }
+        {
+          $pull: { likes: session.user.name, dislikes: session.user.name },
+        }
       );
     } else {
       await snippetsRef.updateOne(
         { _id: new ObjectId(id) },
-        { $push: { likes: session.user.name } }
+        {
+          $push: { likes: session.user.name },
+          $pull: { dislikes: session.user.name },
+        }
       );
     }
 

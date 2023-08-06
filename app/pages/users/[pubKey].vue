@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PublicKey } from "@solana/web3.js";
-import { Snippet } from "~/ts/types";
-import { getAvatar } from "~/ts/utils";
+import { Snippet, User } from "~/ts/types";
+import { getAvatar, shortenPublicKey, signInWithGithub } from "~/ts/utils";
 
 const route = useRoute();
 
@@ -11,13 +11,7 @@ const isValidPubKey = computed(() => {
   return PublicKey.isOnCurve(pubKey);
 });
 
-const { data } = useAuth();
-
-const user = computed(() => {
-  if (data.value?.user) {
-    return data.value.user;
-  }
-});
+const authState = useAuthState();
 
 const fetchData = async ({
   currentPage,
@@ -28,7 +22,7 @@ const fetchData = async ({
 }) => {
   const offset = (currentPage - 1) * currentPageSize;
 
-  const res = await $fetch(`/api/${pubKey}/snippets`, {
+  const res = await $fetch(`/api/users/${pubKey}/snippets`, {
     query: {
       limit: currentPageSize,
       offset,
@@ -44,14 +38,15 @@ const fetchData = async ({
 const { data: snippetsData } = await useAsyncData(
   "snippets",
   () =>
-    $fetch(`/api/${pubKey}/snippets`, {
+    $fetch(`/api/users/${pubKey}/snippets`, {
       query: {
         initial: true,
-        limit: 3,
+        limit: 9,
         offset: 0,
       },
     }),
   {
+    lazy: !isValidPubKey.value,
     transform: (value) => {
       return value.data as {
         userSnippets: Snippet[];
@@ -59,13 +54,38 @@ const { data: snippetsData } = await useAsyncData(
         totalLikesCount: number;
       };
     },
-  }
+  },
 );
+
+const { data: userData } = await useAsyncData(
+  "user",
+  () => $fetch(`/api/users/${pubKey}/profile`),
+  {
+    lazy: !isValidPubKey.value,
+    transform: (value) => {
+      return value.data as User;
+    },
+  },
+);
+
+const userPage = ref<HTMLElement | null>(null);
+
+if (process.client) {
+  useInfiniteScroll(
+    window,
+    () => {
+      next();
+    },
+    {
+      distance: 400,
+    },
+  );
+}
 
 const { next } = useOffsetPagination({
   page: 1,
   total: snippetsData.value?.totalSnippetsCount,
-  pageSize: 3,
+  pageSize: 9,
   onPageChange: fetchData,
   onPageSizeChange: fetchData,
 });
@@ -74,152 +94,211 @@ const userSnippets = useState("userSnippets", () => {
   return snippetsData.value?.userSnippets ?? [];
 });
 
-const handleScroll = () => {
-  const scrollHeight = document.documentElement.scrollHeight;
-  const scrollTop =
-    document.documentElement.scrollTop || document.body.scrollTop;
-  const clientHeight = document.documentElement.clientHeight;
+const config = useRuntimeConfig();
 
+const onClickGithubButton = () => {
   if (
-    scrollHeight - scrollTop - 200 < clientHeight &&
-    snippetsData.value?.totalSnippetsCount &&
-    userSnippets.value.length < snippetsData.value?.totalSnippetsCount
+    // If this is the user's profile page and they haven't connected their Github account yet
+    userData.value?.publicKey === authState.data.value?.user?.name &&
+    !userData.value?.username
   ) {
-    next();
+    signInWithGithub(config.public.githubClientId);
+  } else {
+    window.open(`https://github.com/${userData.value?.username}`, "_blank");
   }
 };
-
-onMounted(() => {
-  window.addEventListener("scroll", handleScroll);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", handleScroll);
-});
 </script>
 
 <template>
-  <nuxt-layout name="user">
-    <div class="flex flex-col items-center justify-center space-y-5">
-      <img v-if="user?.image" :src="user.image" class="w-16 h-16 rounded-sm" />
-      <div class="flex flex-row items-center justify-center space-x-2">
-        <h4 class="text-white/80">
-          {{ pubKey.slice(0, 4) + "..." + pubKey.slice(-4) }}
-        </h4>
-      </div>
-      <div
-        class="flex flex-row items-center justify-center space-x-4 text-white/50"
-      >
-        <p>
-          {{ snippetsData?.totalSnippetsCount }}
-          {{ snippetsData?.totalSnippetsCount === 1 ? "Snippet" : "Snippets" }}
-        </p>
-        <p>
-          {{ snippetsData?.totalLikesCount }}
-          {{ snippetsData?.totalLikesCount === 1 ? "Like" : "Likes" }}
-        </p>
-      </div>
-    </div>
-
-    <div class="h-10" />
-
-    <div class="w-full flex flex-col items-center justify-center space-y-5">
-      <div
-        v-if="userSnippets && userSnippets?.length > 0"
-        class="w-full flex flex-col items-center"
-      >
-        <transition-group
-          name="user-snippets-list"
-          tag="div"
-          class="w-full flex flex-col items-center justify-center space-y-5"
+  <div
+    ref="userPage"
+    class="w-screen min-h-screen px-5 py-20 pt-28 relative flex items-start justify-center"
+  >
+    <div class="max-w-7xl w-full justify-start items-start">
+      <main class="flex flex-col items-start justify-start">
+        <div
+          v-if="userData"
+          class="w-full flex flex-row justify-between items-center"
         >
-          <nuxt-link
-            v-for="snippet in userSnippets"
-            :key="snippet._id.toString()"
-            :to="`/snippets/${snippet._id.toString()}`"
-            class="snippet-card w-full md:w-3/4 lg:w-2/3 max-w-xl"
-          >
-            <p class="text-xl font-medium text-white/90 line-clamp-2">
-              {{ snippet.title }}
-            </p>
-            <p class="text-sm text-white/80 line-clamp-2">
-              {{ snippet.description }}
-            </p>
-            <div class="flex flex-wrap items-start justify-start">
-              <p
-                v-for="tag in snippet.tags"
-                :key="tag"
-                class="px-2 py-1 mt-1.5 mr-1.5 bg-white/5 rounded-md text-sm border border-white/10 h-8 w-max"
+          <div class="flex flex-row items-center space-x-6">
+            <img
+              :src="userData.avatarUrl"
+              class="w-20 h-20 rounded-lg border-4 border-white/10"
+            />
+            <div class="flex flex-col items-start justify-start space-y-2">
+              <div class="flex flex-row items-center justify-center space-x-3">
+                <p class="text-2xl font-semibold">
+                  {{ userData.username ?? userData.publicKey.slice(0, 4) }}
+                </p>
+
+                <button
+                  v-tooltip="
+                    userData.username
+                      ? 'Visit profile'
+                      : userData.publicKey === authState.data.value?.user?.name
+                      ? 'Connect Github'
+                      : 'User has not connected Github'
+                  "
+                  :class="[
+                    'github-button',
+                    userData.username
+                      ? 'github-button--connected'
+                      : 'github-button--disconnected',
+                  ]"
+                  @click="onClickGithubButton"
+                >
+                  <icon name="bi:github" size="35px" class="text-white/70" />
+                </button>
+              </div>
+              <a
+                target="_blank"
+                :href="`https://solscan.io/address/${userData.publicKey}`"
+                class="px-2 py-1 rounded-md flex flex-row space-x-1 items-center text-white/40 border border-white/5 hover:border-white/10 hover:text-white/50 transition-colors duration-300"
               >
-                {{ tag }}
+                <icon name="formkit:solana" size="1.1em" />
+                <p class="text-sm">
+                  {{ shortenPublicKey(userData.publicKey) }}
+                </p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full pt-10">
+          <div class="space-y-8 flex flex-col items-start justify-center">
+            <div class="top-5 space-x-8 flex flex-row text-lg font-medium">
+              <p class="border-b-2 border-primary/80 pb-2">Snippets</p>
+              <p class="text-white/50 cursor-not-allowed">Bookmarks</p>
+            </div>
+
+            <div
+              v-if="userSnippets && userSnippets?.length > 0"
+              class="w-full flex flex-col"
+            >
+              <transition-group
+                name="user-snippets-list"
+                tag="div"
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+                  grid-gap: 20px;
+                "
+              >
+                <nuxt-link
+                  v-for="snippet in userSnippets"
+                  :key="snippet._id.toString()"
+                  :to="`/snippets/${snippet._id.toString()}`"
+                  class="snippet-card"
+                >
+                  <p class="text-xl font-medium text-white/90 line-clamp-1">
+                    {{ snippet.title.repeat(2) }}
+                  </p>
+                  <p class="w-full text-sm text-white/80 line-clamp-2">
+                    {{ snippet.description }}
+                  </p>
+                  <div class="flex flex-wrap items-start justify-start">
+                    <p
+                      v-for="tag in snippet.tags"
+                      :key="tag"
+                      class="px-2 py-1 mt-1.5 mr-1.5 bg-white/5 rounded-md text-sm border border-white/10 h-8 w-max"
+                    >
+                      {{ tag }}
+                    </p>
+                  </div>
+                  <div
+                    class="w-full flex flex-row justify-between items-center pt-2"
+                  >
+                    <div class="w-full flex flex-row items-center space-x-2">
+                      <img
+                        class="h-5 w-5 rounded-full"
+                        :src="getAvatar(snippet.creator)"
+                        alt=""
+                      />
+                      <p class="text-sm text-white/80">
+                        {{
+                          snippet.creator.slice(0, 4) +
+                          "..." +
+                          snippet.creator.slice(-4)
+                        }}
+                      </p>
+                    </div>
+                    <div
+                      class="w-full flex flex-row items-center justify-end space-x-3 text-white/60"
+                    >
+                      <div
+                        class="flex flex-row items-center space-x-2 border-r border-white/20 pr-3"
+                      >
+                        <p class="text-base">
+                          {{ snippet.dislikes.length }}
+                        </p>
+                        <icon name="mingcute:thumb-down-2-line" size="1.4em" />
+                      </div>
+
+                      <div class="flex flex-row items-center space-x-2">
+                        <p class="text-base">{{ snippet.likes.length }}</p>
+                        <icon name="mingcute:thumb-up-2-line" size="1.4em" />
+                      </div>
+                    </div>
+                  </div>
+                </nuxt-link>
+              </transition-group>
+
+              <button
+                v-if="
+                  snippetsData?.totalSnippetsCount &&
+                  snippetsData?.totalSnippetsCount > userSnippets.length
+                "
+                class="w-fit mx-auto mt-3 py-5 pl-2 text-white/50 text-base hover:text-primary transition-colors duration-500"
+                @click="next"
+              >
+                Load More
+              </button>
+            </div>
+
+            <div v-else-if="!isValidPubKey">
+              <p class="text-white/80 text-center">
+                This user doesn't exist (Public Key is invalid). <br />Please
+                check the URL.
               </p>
             </div>
-            <div class="w-full flex flex-row justify-between items-center pt-2">
-              <div class="w-full flex flex-row items-center space-x-2">
-                <img
-                  class="h-5 w-5 rounded-full"
-                  :src="getAvatar(snippet.creator)"
-                  alt=""
-                />
-                <p class="text-sm text-white/80">
-                  {{
-                    snippet.creator.slice(0, 4) +
-                    "..." +
-                    snippet.creator.slice(-4)
-                  }}
-                </p>
-              </div>
-              <div
-                class="w-full flex flex-row items-center justify-end space-x-2 text-white/80"
-              >
-                <icon
-                  name="ph:heart-straight"
-                  size="1.4em"
-                  class="text-red-800/80"
-                />
-                <p class="text-base">{{ snippet.likes.length }}</p>
-              </div>
+
+            <div v-else>
+              <p class="text-white/80">
+                No snippets found.
+                <a
+                  v-if="userData?.publicKey === pubKey"
+                  class="text-primary/80 hover:underline"
+                  href="/create"
+                  >Create one</a
+                >
+              </p>
             </div>
-          </nuxt-link>
-        </transition-group>
-        <button
-          v-if="
-            snippetsData?.totalSnippetsCount &&
-            snippetsData?.totalSnippetsCount > userSnippets.length
-          "
-          class="w-fit flex items-center justify-center py-10 text-lg hover:text-primary"
-        >
-          Load more
-        </button>
-      </div>
-      <div v-else-if="!isValidPubKey">
-        <p class="text-white/80 text-center">
-          This user doesn't exist (Public Key is invalid). <br />Please check
-          the URL.
-        </p>
-      </div>
-      <div v-else>
-        <p class="text-white/80">
-          No snippets found.
-          <nuxt-link
-            v-if="data!.user?.name === pubKey"
-            class="text-primary/80 hover:underline"
-            to="/create"
-            >Create one</nuxt-link
-          >
-        </p>
-      </div>
+          </div>
+        </div>
+      </main>
     </div>
-  </nuxt-layout>
+  </div>
 </template>
 
 <style lang="postcss" scoped>
 .snippet-card {
   background: linear-gradient(140deg, #0c0c0c, #000000);
-  @apply px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-2xl border-[1.5px] border-white/10 cursor-pointer transition-all duration-300;
+  @apply px-5 py-4 space-y-2 flex flex-col justify-between items-start rounded-2xl border-[1.5px] border-white/10 overflow-hidden cursor-pointer transition-all duration-300;
 }
 
 .snippet-card:hover {
   @apply border-primary/70;
+}
+
+.github-button {
+  @apply h-[35px] w-[35px] p-1.5 flex items-center justify-center rounded-full hover:scale-105 active:scale-95 transition-all duration-300;
+}
+
+.github-button--connected {
+  background: linear-gradient(140deg, #109093, #000000);
+}
+
+.github-button--disconnected {
+  background: linear-gradient(140deg, #850808, #000000);
 }
 </style>

@@ -1,7 +1,9 @@
 <script lang="ts">
   import CloseIcon from "../../icons/CloseIcon.svelte";
   import WandIcon from "../../icons/WandIcon.svelte";
-  import type { Snippet } from "../../types";
+  import { isLoading, pinnedSnippets, snippets } from "@/webviews/store";
+  import type { Snippet } from "@/src/types";
+  import { Circle } from "svelte-loading-spinners";
 
   const insertSnippet = (snippet: Snippet) => {
     postMessage({
@@ -9,24 +11,32 @@
       value: snippet,
     });
   };
-
-  const openSnippetDetails = (selectedSnippet: Snippet) => {
+  const unpinSnippet = (snippet: Snippet) => () => {
+    pinnedSnippets.set($pinnedSnippets.filter((s) => s._id !== snippet._id));
+    console.log("Unpinning snippet", snippet);
     postMessage({
-      type: "openSnippetDetails",
-      value: selectedSnippet,
+      type: "unpinSnippet",
+      value: snippet,
     });
   };
 
-  export let pinnedSnippets: Snippet[] = [];
-  export let snippets: Snippet[] = [];
+  const openSnippetDetails = (snippet: Snippet) => {
+    postMessage(
+      {
+        type: "openSnippetDetails",
+        value: snippet,
+      },
+      "*"
+    );
+  };
 </script>
 
 <div class="snippets-listview">
-  {#each pinnedSnippets as pinnedSnippet}
+  {#each $pinnedSnippets as pinnedSnippet}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="pinned-snippet-card">
       <div class="pinned-snippet-card-leading">
-        <div class="close-button">
+        <div class="close-button" on:click={unpinSnippet(pinnedSnippet)}>
           <CloseIcon />
         </div>
         <p class="pinned-snippet-card-title">
@@ -40,7 +50,7 @@
     </div>
   {/each}
 
-  {#each snippets as snippet}
+  {#each $snippets as snippet}
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div class="snippet-card" on:click={() => openSnippetDetails(snippet)}>
       <h3 class="snippet-card-title">{snippet.title}</h3>
@@ -52,6 +62,21 @@
       </div>
     </div>
   {/each}
+
+  {#if $snippets.length == 0 && $isLoading === false}
+    <div class="no-snippets-container">
+      <p style="font-size: 50px; margin: 0; color: var(--vscode-foreground);">
+        404
+      </p>
+      <p>No snippets found for your query. Try searching for something else.</p>
+    </div>
+  {/if}
+
+  {#if $snippets.length === 0 && $isLoading === true}
+    <div class="loading-container">
+      <Circle color="#005d63" size="40" />
+    </div>
+  {/if}
 </div>
 
 <style scoped>
@@ -145,5 +170,22 @@
     padding: 2px 5px;
     border-radius: 2px;
     background-color: var(--vscode-inputOption-activeBackground);
+  }
+
+  .no-snippets-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 200px);
+    text-align: center;
+    padding: 10px 20px;
+  }
+
+  .loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 200px);
   }
 </style>

@@ -27,13 +27,13 @@ const { showDialog, dialogContent, dialogType, dialogActions } =
     <!-- We need 2 seperate transitions here for cleaner animations -->
     <transition name="fade">
       <div
-        v-if="showDialog == true"
+        v-if="showDialog"
         class="dialog-backdrop"
         @click="dialogStore.closeDialog()"
       />
     </transition>
     <transition name="dialog">
-      <div v-if="showDialog == true" class="dialog-border z-50 relative">
+      <div v-if="showDialog" class="dialog-border z-50 relative">
         <!-- TODO -->
         <!-- <icon
           name="line-md:alert"
@@ -41,7 +41,7 @@ const { showDialog, dialogContent, dialogType, dialogActions } =
           class="z-[10] top-0 left-0 text-white"
         /> -->
         <div
-          class="w-[400px] p-4 pb-[85px] rounded-2xl border-primary bg-background"
+          class="w-[420px] p-5 pb-[85px] rounded-2xl border-primary bg-background"
         >
           <h3 class="text-white ml-1 mb-5 text-center font-semibold">
             {{ dialogType }}
@@ -57,7 +57,7 @@ const { showDialog, dialogContent, dialogType, dialogActions } =
             v-for="action in dialogActions"
             :key="action.label"
             class="w-full py-2 font-medium border-[1.5px] border-white/10 rounded-2xl active:scale-95 hover:scale-[1.03] duration-500 hover:text-primary"
-            @click="action.callback"
+            @click="action.callback()"
           >
             {{ action.label }}
           </button>

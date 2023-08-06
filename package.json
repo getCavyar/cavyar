@@ -1,9 +1,0 @@
-{
-  "name": "cavyar",
-  "version": "1.0.0",
-  "description": "Solana Devtools",
-  "author": "Yusuf-Uluc",
-  "license": "GNU",
-  "private": true,
-  "scripts": {}
-}

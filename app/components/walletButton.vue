@@ -105,7 +105,7 @@ const openWalletDialog = () => {
 
 <style lang="postcss" scoped>
 .wallet-button {
-  @apply p-0.5 pt-2.5 relative flex items-start justify-center bg-transparent backdrop-blur-2xl border border-white/5 shadow-lg shadow-black/20 transition-all duration-500;
+  @apply p-0.5 pt-2.5 relative flex items-start justify-center bg-transparent backdrop-blur-2xl border border-white/5 hover:border-white/10 shadow-lg shadow-black/20 transition-all duration-500;
 }
 
 .border-transition {
