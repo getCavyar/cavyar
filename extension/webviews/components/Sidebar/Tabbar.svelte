@@ -16,22 +16,13 @@
     Search
   </button>
   <button
-    class={selectedTab == "Favourites" ? "selected-tab" : "tab"}
+    class={selectedTab == "Bookmarks" ? "selected-tab" : "tab"}
     on:click={() => {
-      setSelectedTab("Favourites");
-      navigate("/favourites");
+      setSelectedTab("Bookmarks");
+      navigate("/bookmarks");
     }}
   >
-    Favourites
-  </button>
-  <button
-    class={selectedTab == "Zaps" ? "selected-tab" : "tab"}
-    on:click={() => {
-      setSelectedTab("Zaps");
-      navigate("/zaps");
-    }}
-  >
-    Zaps
+    Bookmarks
   </button>
 </div>
 

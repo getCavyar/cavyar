@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 import { storeToRefs } from "pinia";
 import { useSnippetCreationStore } from "~/stores/snippetCreationStore";
-
+import { frameworks } from "~/ts/constants";
 const snippetCreationStore = useSnippetCreationStore();
-const { frameworks, snippetFramework } = storeToRefs(snippetCreationStore);
+const { snippetFramework } = storeToRefs(snippetCreationStore);
 </script>
 
 <template>

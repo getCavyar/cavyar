@@ -1,16 +1,21 @@
 {
   "compilerOptions": {
+    "moduleResolution": "node",
     "module": "CommonJS",
     "target": "ES2020",
     "lib": ["ES2020"],
+    "outDir": "./out",
     "sourceMap": true,
-    "rootDir": "src",
     "strict": true /* enable all strict type-checking options */,
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    }
     /* Additional Checks */
     // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
     // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
     // "noUnusedParameters": true,  /* Report errors on unused parameters. */
-    "baseUrl": "./src"
   },
+  "include": ["src/**/*.ts"],
   "exclude": ["node_modules", ".vscode-test", "webviews"]
 }

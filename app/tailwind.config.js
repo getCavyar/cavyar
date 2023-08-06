@@ -13,9 +13,14 @@ module.exports = {
         primary: "#00eeff",
         secondary: "#005d63",
         background: "#050505",
-        surface: "#0D0D0D",
+        surface: "#080808",
         backgroundLight: "#F9F9F9",
         surfaceLight: "#FFFFFF",
+
+        // Snippet Action Button
+        "dark-red": "#280606",
+        "dark-green": "#031D12",
+        "dark-blue": "#08192E",
       },
       fontFamily: {
         montserrat: ["Montserrat", "sans-serif"],
