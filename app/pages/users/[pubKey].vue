@@ -191,7 +191,7 @@ const onClickGithubButton = () => {
                   class="snippet-card"
                 >
                   <p class="text-xl font-medium text-white/90 line-clamp-1">
-                    {{ snippet.title.repeat(2) }}
+                    {{ snippet.title }}
                   </p>
                   <p class="w-full text-sm text-white/80 line-clamp-2">
                     {{ snippet.description }}
