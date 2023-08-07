@@ -15,14 +15,8 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@master
       
       - name: Deploy to fly
-        run: |
-          flyctl deploy app --remote-only \
-            --build-secret NUXT_MONGO_PW=${{ secrets.NUXT_MONGO_PW }} \
-            --build-secret GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }} \
-            --build-secret OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-            --build-secret PRIVATE_RPC=${{ secrets.PRIVATE_RPC }} \
-            --build-secret AUTH_SECRET=${{ secrets.AUTH_SECRET }}
-
+        run: flyctl deploy app --remote-only
+        
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           
