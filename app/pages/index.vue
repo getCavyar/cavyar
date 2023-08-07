@@ -94,6 +94,7 @@ onMounted(() => {
             <div class="relative h-24 flex items-center justify-center">
               <img
                 src="@/assets/images/logo_transparent.png"
+                alt=""
                 :class="[
                   'transition-all duration-700 cavyar-logo-animation object-contain',
                   search.focused

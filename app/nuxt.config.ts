@@ -1,6 +1,8 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import inject from "@rollup/plugin-inject";
+// import { dirname, join } from "path";
+// import { fileURLToPath } from "url";
 
 export default defineNuxtConfig({
   ssr: true,
@@ -41,8 +43,9 @@ export default defineNuxtConfig({
     "@nuxtjs/tailwindcss",
     "nuxt-icon",
     "nuxt-monaco-editor",
-    // "@nuxtjs/fontaine",
     "floating-vue/nuxt",
+    "@nuxt/image",
+    // "@nuxtjs/fontaine",
     // "nuxt-security",
   ],
   css: ["@/assets/css/main.pcss"],
@@ -52,6 +55,15 @@ export default defineNuxtConfig({
       mode: "out-in",
     },
   },
+  image: {},
+  // alias: {
+  //   "@unhead/vue": require.resolve(
+  //     join(
+  //       dirname(fileURLToPath(import.meta.url)),
+  //       "./node_modules/@unhead/vue",
+  //     ),
+  //   ),
+  // },
   monacoEditor: {
     // These are default values:
     // dest: "_monaco",
