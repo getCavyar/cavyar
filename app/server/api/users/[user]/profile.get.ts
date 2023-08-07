@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
     return SuccessResponse.new<User>(
       200,
       "Operation was successful",
-      userProfile
+      userProfile,
     );
   } catch (error) {
     return ErrorResponse.new(500, `An unknown error occurred: ${error}`, null);

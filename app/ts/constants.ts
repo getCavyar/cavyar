@@ -1,10 +1,7 @@
 import { Connection } from "@solana/web3.js";
 import { SnippetFramework } from "./types";
 
-export const connection = new Connection(
-  "https://purple-patient-dinghy.solana-mainnet.quiknode.pro/54c6bb6d667d68fdffd162eecd15708b0fa11621/",
-  "processed",
-);
+export const connection = new Connection("https://rpc.cavyar.io", "processed");
 
 export const frameworks = [
   {
