@@ -1,9 +1,8 @@
-import { PromptTemplate } from "langchain";
 import { ConversationalRetrievalQAChain } from "langchain/chains";
-import {} from "langchain/tools";
 import { OpenAIChat } from "langchain/llms/openai";
 import { BufferMemory } from "langchain/memory";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
+import { PromptTemplate } from "langchain/prompts";
 
 const CONDENSE_PROMPT =
   PromptTemplate.fromTemplate(`Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question.
