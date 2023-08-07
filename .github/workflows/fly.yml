@@ -10,8 +10,12 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: |
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Deploy to fly
+        run: |
           flyctl deploy app --remote-only --build-secret \
             --env NUXT_MONGO_PW=${{ secrets.NUXT_MONGO_PW }} \
             --env GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }} \
