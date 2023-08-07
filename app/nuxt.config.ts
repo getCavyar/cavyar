@@ -79,7 +79,6 @@ export default defineNuxtConfig({
     mongoPW: process.env.MONGO_PW,
     authSecret: process.env.AUTH_SECRET,
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET,
-    encryptionKey: process.env.ENCRYPTION_KEY,
     privateRPC: process.env.PRIVATE_RPC,
     // Public Variables
     public: {

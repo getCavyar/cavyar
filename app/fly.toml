@@ -22,3 +22,8 @@ primary_region = "ams"
     interval = "15s"
     timeout = "2s"
     grace_period = "5s"
+
+[env]
+  BASE_URL="https://beta.cavyar.io"
+  AUTH_ORIGIN="https://beta.cavyar.io"
+  GITHUB_CLIENT_ID="9e3b2d8792738ffd589d"
