@@ -45,12 +45,12 @@ const handleSignIn = async () => {
       signature: serializedSignature,
     });
     if (res?.error) {
-      openDialog(DialogType.Error, `${res.error}`);
+      // openDialog(DialogType.Error, `${res.error}`);
     }
   } catch (error) {
     // eslint-disable-next-line no-console
     console.log(error);
-    openDialog(DialogType.Error, `${error}`);
+    // openDialog(DialogType.Error, `${error}`);
   }
 };
 
